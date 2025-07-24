@@ -1,12 +1,9 @@
 package com.cgfay.picker;
 
-import android.os.Bundle;
 
-import androidx.fragment.app.Fragment;
+import android.content.Intent;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
 
-import com.cgfay.picker.fragment.MediaPickerFragment;
 import com.cgfay.picker.selector.OnMediaSelector;
 import com.cgfay.picker.loader.MediaLoader;
 
@@ -113,32 +110,15 @@ public final class MediaPickerBuilder {
     }
 
     /**
-     * 显示Fragment
+     * 打开基于Compose的媒体选择页面
      */
     public void show() {
         FragmentActivity activity = mMediaPicker.getActivity();
         if (activity == null) {
             return;
         }
-        FragmentManager fragmentManager = null;
-        if (mMediaPicker.getFragment() != null) {
-            fragmentManager = mMediaPicker.getFragment().getChildFragmentManager();
-        } else {
-            fragmentManager = activity.getSupportFragmentManager();
-        }
-        Fragment oldFragment = fragmentManager.findFragmentByTag(MediaPickerFragment.TAG);
-        if (oldFragment != null) {
-            fragmentManager.beginTransaction()
-                    .remove(oldFragment)
-                    .commitAllowingStateLoss();
-        }
-        MediaPickerFragment fragment = new MediaPickerFragment();
-        fragment.setOnMediaSelector(mMediaSelector);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(MediaPicker.PICKER_PARAMS, mPickerParam);
-        fragment.setArguments(bundle);
-        fragmentManager.beginTransaction()
-                .add(fragment, MediaPickerFragment.TAG)
-                .commitAllowingStateLoss();
+        Intent intent = new Intent(activity, com.cgfay.picker.compose.PickerComposeActivity.class);
+        intent.putExtra(MediaPicker.PICKER_PARAMS, mPickerParam);
+        activity.startActivity(intent);
     }
 }
