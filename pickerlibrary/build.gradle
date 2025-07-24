@@ -61,6 +61,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${rootProject.ext.lifecycleVersion}"
     debugImplementation "androidx.compose.ui:ui-tooling:${rootProject.ext.composeVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    testImplementation "io.mockk:mockk:1.13.9"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidXJunitVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
 }
