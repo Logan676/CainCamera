@@ -49,10 +49,10 @@ public class FFRecordRenderer implements GLSurfaceView.Renderer {
     private volatile boolean mNeedToAttach;
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
 
-    private final WeakReference<FFMediaRecordViewModel> mWeakPresenter;
+    private final WeakReference<FFMediaRecordViewModel> mWeakViewModel;
 
-    public FFRecordRenderer(FFMediaRecordViewModel presenter) {
-        mWeakPresenter = new WeakReference<>(presenter);
+    public FFRecordRenderer(FFMediaRecordViewModel viewModel) {
+        mWeakViewModel = new WeakReference<>(viewModel);
     }
 
     @Override
@@ -170,8 +170,8 @@ public class FFRecordRenderer implements GLSurfaceView.Renderer {
      * 初始化滤镜
      */
     private void initFilters() {
-        mInputFilter = new GLImageOESInputFilter(mWeakPresenter.get().getActivity());
-        mImageFilter = new GLImageFilter(mWeakPresenter.get().getActivity());
+        mInputFilter = new GLImageOESInputFilter(mWeakViewModel.get().getActivity());
+        mImageFilter = new GLImageFilter(mWeakViewModel.get().getActivity());
     }
 
     /**

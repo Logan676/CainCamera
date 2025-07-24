@@ -51,11 +51,11 @@ public class RecordRenderer implements GLSurfaceView.Renderer {
     private volatile boolean mNeedToAttach;
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
     private float[] mMatrix = new float[16];
-    // presenter
-    private final WeakReference<RecordViewModel> mWeakPresenter;
+    // viewModel
+    private final WeakReference<RecordViewModel> mWeakViewModel;
 
-    public RecordRenderer(RecordViewModel presenter) {
-        mWeakPresenter = new WeakReference<>(presenter);
+    public RecordRenderer(RecordViewModel viewModel) {
+        mWeakViewModel = new WeakReference<>(viewModel);
     }
 
     @Override
@@ -70,8 +70,8 @@ public class RecordRenderer implements GLSurfaceView.Renderer {
         GLES30.glEnable(GL10.GL_CULL_FACE);
         GLES30.glEnable(GL10.GL_DEPTH_TEST);
         initFilters();
-        if (mWeakPresenter.get() != null) {
-            mWeakPresenter.get().onBindSharedContext(EGL14.eglGetCurrentContext());
+        if (mWeakViewModel.get() != null) {
+            mWeakViewModel.get().onBindSharedContext(EGL14.eglGetCurrentContext());
         }
     }
 
@@ -113,8 +113,8 @@ public class RecordRenderer implements GLSurfaceView.Renderer {
         // 将最终的结果会是预览
         mImageFilter.drawFrame(currentTexture, mDisplayVertexBuffer, mDisplayTextureBuffer);
         // 录制视频
-        if (mWeakPresenter.get() != null) {
-            mWeakPresenter.get().onRecordFrameAvailable(currentTexture, timeStamp);
+        if (mWeakViewModel.get() != null) {
+            mWeakViewModel.get().onRecordFrameAvailable(currentTexture, timeStamp);
         }
     }
 
@@ -174,9 +174,9 @@ public class RecordRenderer implements GLSurfaceView.Renderer {
     }
 
     private void initFilters() {
-        mInputFilter = new GLImageOESInputFilter(mWeakPresenter.get().getActivity());
-        mColorFilter = new GLImageDrosteFilter(mWeakPresenter.get().getActivity());
-        mImageFilter = new GLImageFilter(mWeakPresenter.get().getActivity());
+        mInputFilter = new GLImageOESInputFilter(mWeakViewModel.get().getActivity());
+        mColorFilter = new GLImageDrosteFilter(mWeakViewModel.get().getActivity());
+        mImageFilter = new GLImageFilter(mWeakViewModel.get().getActivity());
     }
 
     private void onFilterSizeChanged() {
