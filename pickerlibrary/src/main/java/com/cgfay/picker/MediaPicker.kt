@@ -17,8 +17,11 @@ class MediaPicker private constructor(activity: FragmentActivity?, fragment: Fra
     companion object {
         const val PICKER_PARAMS = "PICKER_PARAMS"
 
+        /** Create a picker starting from an activity. This is the preferred
+         *  entry point when using Jetpack Compose screens. */
         fun from(activity: FragmentActivity): MediaPickerBuilder = MediaPickerBuilder(MediaPicker(activity))
 
+        /** Legacy helper for fragment-based UIs. */
         fun from(fragment: Fragment): MediaPickerBuilder = MediaPickerBuilder(MediaPicker(fragment.activity, fragment))
     }
 }
