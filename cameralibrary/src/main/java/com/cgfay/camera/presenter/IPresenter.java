@@ -16,6 +16,10 @@ public abstract class IPresenter <T> {
         mTarget = target;
     }
 
+    public void setTarget(T target) {
+        mTarget = target;
+    }
+
     public T getTarget() {
         return mTarget;
     }

@@ -4,7 +4,8 @@ import android.graphics.SurfaceTexture;
 import android.opengl.EGLContext;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
+
+import com.cgfay.camera.presenter.CameraPreviewView;
 
 import com.cgfay.filter.glfilter.color.bean.DynamicColor;
 import com.cgfay.filter.glfilter.makeup.bean.DynamicMakeup;
@@ -16,7 +17,7 @@ import com.cgfay.media.recorder.SpeedMode;
  * @author CainHuang
  * @date 2019/7/3
  */
-public abstract class PreviewPresenter<T extends Fragment> extends IPresenter<T> {
+public abstract class PreviewPresenter<T extends CameraPreviewView> extends IPresenter<T> {
 
     PreviewPresenter(T target) {
         super(target);

@@ -58,12 +58,13 @@ import com.cgfay.uitls.utils.BrightnessUtils;
 import com.cgfay.uitls.utils.PermissionUtils;
 import com.cgfay.uitls.widget.RoundOutlineProvider;
 import com.cgfay.widget.CameraTabView;
+import com.cgfay.camera.presenter.CameraPreviewView;
 
 
 /**
  * 相机预览页面
  */
-public class CameraPreviewFragment extends Fragment implements View.OnClickListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class CameraPreviewFragment extends Fragment implements View.OnClickListener, LoaderManager.LoaderCallbacks<Cursor>, CameraPreviewView {
 
     private static final String TAG = "CameraPreviewFragment";
     private static final boolean VERBOSE = true;
@@ -135,9 +136,16 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     private Dialog mDialog;
 
     public CameraPreviewFragment() {
+        this(new CameraPreviewPresenter());
+    }
+
+    public CameraPreviewFragment(CameraPreviewPresenter presenter) {
         mCameraParam = CameraParam.getInstance();
         mMainHandler = new Handler(Looper.getMainLooper());
-        mPreviewPresenter = new CameraPreviewPresenter(this);
+        mPreviewPresenter = presenter;
+        if (mPreviewPresenter != null) {
+            mPreviewPresenter.setTarget(this);
+        }
     }
 
     @Override

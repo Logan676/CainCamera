@@ -14,6 +14,7 @@ import androidx.fragment.app.FragmentActivity
 import com.cgfay.cameralibrary.R
 import com.cgfay.camera.compose.CameraPreviewScreen
 import com.cgfay.camera.fragment.CameraPreviewFragment
+import com.cgfay.camera.presenter.CameraPreviewPresenter
 import com.cgfay.facedetect.engine.FaceTracker
 import com.cgfay.uitls.utils.NotchUtils
 
@@ -37,8 +38,9 @@ class CameraActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val presenter = CameraPreviewPresenter()
         setContent {
-            CameraPreviewScreen(fragmentTag = FRAGMENT_CAMERA)
+            CameraPreviewScreen(presenter = presenter, fragmentTag = FRAGMENT_CAMERA)
         }
         faceTrackerRequestNetwork()
     }
