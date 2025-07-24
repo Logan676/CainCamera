@@ -1,6 +1,5 @@
 package com.cgfay.picker.compose
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -20,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cgfay.scan.R
+import coil.compose.AsyncImage
 
 @Composable
 fun MediaPickerScreen(
@@ -57,8 +57,8 @@ fun MediaPickerScreen(
                 Box(modifier = Modifier
                     .padding(2.dp)
                     .clickable { onPreview(media) }, contentAlignment = Alignment.Center) {
-                    Image(
-                        painterResource(id = media),
+                    AsyncImage(
+                        model = media,
                         contentDescription = null,
                         modifier = Modifier.size(100.dp)
                     )
