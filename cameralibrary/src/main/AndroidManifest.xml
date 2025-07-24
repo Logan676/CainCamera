@@ -9,6 +9,9 @@
             android:screenOrientation="portrait"/>
         <activity android:name="com.cgfay.camera.activity.CameraSettingActivity" />
         <activity android:name="com.cgfay.camera.activity.WatermarkActivity"/>
+        <activity
+            android:name="com.cgfay.camera.compose.CameraComposeActivity"
+            android:theme="@style/NoActionBarTheme"/>
     </application>
 
 </manifest>
