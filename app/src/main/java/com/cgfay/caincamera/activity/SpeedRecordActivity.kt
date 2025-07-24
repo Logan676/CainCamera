@@ -6,16 +6,32 @@ import android.graphics.SurfaceTexture
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.caincamera.R
 import com.cgfay.caincamera.presenter.RecordPresenter
@@ -56,48 +72,8 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
         presenter.setRecordSeconds(15)
         renderer = RecordRenderer(presenter)
         setContent {
-            SpeedRecordScreen { view -> setupViews(view) }
+            SpeedRecordScreen(this, presenter, renderer)
         }
-    }
-
-    private fun setupViews(root: View) {
-        glRecordView = root.findViewById(R.id.gl_record_view)
-        glRecordView.setEGLContextClientVersion(3)
-        glRecordView.setRenderer(renderer)
-        glRecordView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY)
-        glRecordView.addOnTouchScroller(touchScroller)
-
-        progressView = root.findViewById(R.id.record_progress_view)
-        recordSpeedBar = root.findViewById(R.id.record_speed_bar)
-        recordSpeedBar.setOnSpeedChangedListener { speed ->
-            presenter.setSpeedMode(SpeedMode.valueOf(speed.speed))
-        }
-
-        recordButton = root.findViewById(R.id.btn_record)
-        recordButton.addRecordStateListener(object : RecordButton.RecordStateListener {
-            override fun onRecordStart() {
-                presenter.startRecord()
-            }
-            override fun onRecordStop() {
-                presenter.stopRecord()
-            }
-            override fun onZoom(percent: Float) {}
-        })
-
-        btnSwitch = root.findViewById(R.id.btn_switch)
-        btnSwitch.setOnClickListener(this)
-        btnNext = root.findViewById(R.id.btn_next)
-        btnNext.setOnClickListener(this)
-        btnDelete = root.findViewById(R.id.btn_delete)
-        btnDelete.setOnClickListener(this)
-
-        if (NotchUtils.hasNotchScreen(this)) {
-            val view = root.findViewById<View>(R.id.view_safety_area)
-            val params = view.layoutParams as LinearLayout.LayoutParams
-            params.height = StatusBarUtils.getStatusBarHeight(this)
-            view.layoutParams = params
-        }
-        showViews()
     }
 
     override fun onResume() {
@@ -253,14 +229,152 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 }
 
 @Composable
-fun SpeedRecordScreen(onViewCreated: (View) -> Unit) {
+fun SpeedRecordScreen(
+    activity: SpeedRecordActivity,
+    presenter: RecordPresenter,
+    renderer: RecordRenderer
+) {
     val context = LocalContext.current
-    AndroidView(
-        factory = { ctx ->
-            LayoutInflater.from(ctx).inflate(R.layout.activity_speed_record, null, false).apply {
-                onViewCreated(this)
+    val density = LocalDensity.current
+
+    val glRecordView = remember {
+        GLRecordView(context).apply {
+            setEGLContextClientVersion(3)
+            setRenderer(renderer)
+            setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY)
+            addOnTouchScroller(activity.touchScroller)
+        }.also { activity.glRecordView = it }
+    }
+
+    val progressView = remember {
+        RecordProgressView(context).also { activity.progressView = it }
+    }
+
+    val recordSpeedBar = remember {
+        RecordSpeedLevelBar(context).apply {
+            setOnSpeedChangedListener { speed ->
+                presenter.setSpeedMode(SpeedMode.valueOf(speed.speed))
             }
-        },
+        }.also { activity.recordSpeedBar = it }
+    }
+
+    val recordButton = remember {
+        RecordButton(context).apply {
+            addRecordStateListener(object : RecordButton.RecordStateListener {
+                override fun onRecordStart() { presenter.startRecord() }
+                override fun onRecordStop() { presenter.stopRecord() }
+                override fun onZoom(percent: Float) {}
+            })
+        }.also { activity.recordButton = it }
+    }
+
+    val btnSwitch = remember {
+        LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            val size = context.resources.getDimensionPixelSize(R.dimen.top_button_width_height)
+            addView(ImageView(context).apply {
+                setBackgroundResource(R.drawable.ic_camera_switch_camera_light)
+                layoutParams = LinearLayout.LayoutParams(size, size)
+            })
+            addView(TextView(context).apply {
+                setTextColor(context.getColor(R.color.white))
+                text = "翻转"
+            })
+            setOnClickListener(activity)
+        }.also { activity.btnSwitch = it }
+    }
+
+    val btnDelete = remember {
+        Button(context).apply {
+            setBackgroundResource(R.drawable.ic_camera_record_delete)
+            setOnClickListener(activity)
+        }.also { activity.btnDelete = it }
+    }
+
+    val btnNext = remember {
+        Button(context).apply {
+            setBackgroundResource(R.drawable.bg_record_next_button)
+            setText(R.string.btn_next)
+            setTextColor(context.getColor(R.color.white))
+            setOnClickListener(activity)
+        }.also { activity.btnNext = it }
+    }
+
+    Box(
         modifier = Modifier
-    )
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        AndroidView(
+            factory = { glRecordView },
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(9f / 16f)
+                .align(Alignment.TopCenter)
+        )
+
+        AndroidView(
+            factory = { progressView },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = dimensionResource(R.dimen.dp6),
+                    end = dimensionResource(R.dimen.dp6),
+                    top = dimensionResource(R.dimen.dp6)
+                )
+                .align(Alignment.TopCenter)
+        )
+
+        AndroidView(
+            factory = { btnSwitch },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(
+                    top = dimensionResource(R.dimen.top_button_margin),
+                    end = dimensionResource(R.dimen.top_button_margin)
+                )
+        )
+
+        AndroidView(
+            factory = { recordSpeedBar },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    start = dimensionResource(R.dimen.dp50),
+                    end = dimensionResource(R.dimen.dp50),
+                    bottom = dimensionResource(R.dimen.dp20)
+                )
+        )
+
+        AndroidView(
+            factory = { recordButton },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .size(dimensionResource(R.dimen.dp120))
+        )
+
+        AndroidView(
+            factory = { btnDelete },
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(end = dimensionResource(R.dimen.dp20))
+        )
+
+        AndroidView(
+            factory = { btnNext },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+        )
+
+        if (NotchUtils.hasNotchScreen(activity)) {
+            val heightPx = StatusBarUtils.getStatusBarHeight(activity)
+            Spacer(modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .padding(top = with(density) { heightPx.toDp() }))
+        }
+    }
+
+    activity.showViews()
 }
