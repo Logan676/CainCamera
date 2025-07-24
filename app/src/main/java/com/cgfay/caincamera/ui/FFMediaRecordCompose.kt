@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
-import com.cgfay.caincamera.presenter.FFMediaRecordPresenter
+import com.cgfay.caincamera.viewmodel.FFMediaRecordViewModel
 import com.cgfay.caincamera.renderer.FFRecordRenderer
 import com.cgfay.caincamera.widget.GLRecordView
 import com.cgfay.camera.widget.RecordButton
@@ -33,7 +33,7 @@ fun FFMediaRecordScreen(onFinish: () -> Unit) {
     val glRecordViewHolder = remember { mutableStateOf<GLRecordView?>(null) }
     val progressViewHolder = remember { mutableStateOf<RecordProgressView?>(null) }
     val recordButtonHolder = remember { mutableStateOf<RecordButton?>(null) }
-    val presenterHolder = remember { mutableStateOf<FFMediaRecordPresenter?>(null) }
+    val presenterHolder = remember { mutableStateOf<FFMediaRecordViewModel?>(null) }
     var renderer by remember { mutableStateOf<FFRecordRenderer?>(null) }
 
     val viewCallback = remember {
@@ -74,7 +74,7 @@ fun FFMediaRecordScreen(onFinish: () -> Unit) {
         }
     }
 
-    val presenter = presenterHolder.value ?: FFMediaRecordPresenter(activity, viewCallback).also { presenterHolder.value = it }
+    val presenter = presenterHolder.value ?: FFMediaRecordViewModel(activity, viewCallback).also { presenterHolder.value = it }
     if (renderer == null) {
         renderer = FFRecordRenderer(presenter)
     }

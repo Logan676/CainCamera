@@ -58,7 +58,6 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
     private volatile boolean mNeedToAttach;
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
     private float[] mMatrix = new float[16];
-    // presenter
     private final WeakReference<RecordViewModel> mWeakViewModel;
 
     // 同框类型
