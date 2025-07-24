@@ -2,23 +2,38 @@ package com.cgfay.picker.compose
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.cgfay.picker.MediaPickerParam
 import com.cgfay.picker.model.AlbumData
 import com.cgfay.picker.model.MediaData
+import com.cgfay.picker.scanner.AlbumDataScanner
 import com.cgfay.picker.scanner.ImageDataScanner
 import com.cgfay.picker.scanner.IMediaDataReceiver
 import com.cgfay.picker.scanner.VideoDataScanner
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+
+enum class PickerTab { IMAGE, VIDEO }
 
 class PickerViewModel(
+    private val pickerParam: MediaPickerParam,
     imageScannerFactory: (IMediaDataReceiver) -> ImageDataScanner,
-    videoScannerFactory: (IMediaDataReceiver) -> VideoDataScanner
-) : ViewModel(), IMediaDataReceiver {
+    videoScannerFactory: (IMediaDataReceiver) -> VideoDataScanner,
+    albumScannerFactory: () -> AlbumDataScanner
+) : ViewModel(), IMediaDataReceiver, AlbumDataScanner.AlbumDataReceiver {
     private val imageScanner: ImageDataScanner = imageScannerFactory(this)
     private val videoScanner: VideoDataScanner = videoScannerFactory(this)
+    private val albumScanner: AlbumDataScanner = albumScannerFactory().apply {
+        setAlbumDataReceiver(this@PickerViewModel)
+    }
+    private val _selectedTab = MutableStateFlow(
+        when {
+            pickerParam.showVideoOnly() -> PickerTab.VIDEO
+            else -> PickerTab.IMAGE
+        }
+    )
+    val selectedTab: StateFlow<PickerTab> = _selectedTab.asStateFlow()
+
     private val _mediaList = MutableStateFlow<List<MediaData>>(emptyList())
     val mediaList: StateFlow<List<MediaData>> = _mediaList.asStateFlow()
 
@@ -31,17 +46,18 @@ class PickerViewModel(
     private val _selectedAlbum = MutableStateFlow<AlbumData?>(null)
     val selectedAlbum: StateFlow<AlbumData?> = _selectedAlbum
 
-    init {
-        // Compose demo placeholder data using library icons if scanners are not available
-        _albumList.value = listOf(
-            AlbumData("1", Uri.EMPTY, "All", 0)
-        )
-        _selectedAlbum.value = _albumList.value.firstOrNull()
-
-        viewModelScope.launch {
-            imageScanner.resume()
-            videoScanner.resume()
+    private fun loadCurrentMedia() {
+        val album = _selectedAlbum.value ?: return
+        when (_selectedTab.value) {
+            PickerTab.IMAGE -> imageScanner.loadAlbumMedia(album)
+            PickerTab.VIDEO -> videoScanner.loadAlbumMedia(album)
         }
+    }
+
+    init {
+        albumScanner.resume()
+        imageScanner.resume()
+        videoScanner.resume()
     }
 
     fun toggle(media: MediaData) {
@@ -56,7 +72,14 @@ class PickerViewModel(
 
     fun selectAlbum(album: AlbumData) {
         _selectedAlbum.value = album
-        // TODO load album media
+        loadCurrentMedia()
+    }
+
+    fun selectTab(tab: PickerTab) {
+        if (_selectedTab.value != tab) {
+            _selectedTab.value = tab
+            loadCurrentMedia()
+        }
     }
 
     fun finish() {
@@ -65,5 +88,25 @@ class PickerViewModel(
 
     override fun onMediaDataObserve(mediaDataList: List<MediaData>) {
         _mediaList.value = mediaDataList
+    }
+
+    override fun onAlbumDataObserve(albumDataList: List<AlbumData>) {
+        _albumList.value = albumDataList
+        if (_selectedAlbum.value == null && albumDataList.isNotEmpty()) {
+            _selectedAlbum.value = albumDataList.first()
+            loadCurrentMedia()
+        }
+    }
+
+    override fun onAlbumDataReset() {
+        _albumList.value = emptyList()
+        _mediaList.value = emptyList()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        imageScanner.destroy()
+        videoScanner.destroy()
+        albumScanner.destroy()
     }
 }

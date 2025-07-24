@@ -17,7 +17,7 @@ class PickerComposeActivity : ComponentActivity() {
         }
         setContent {
             MaterialTheme {
-                val factory = PickerViewModelFactory(this)
+                val factory = PickerViewModelFactory(this, pickerParam)
                 val pickerViewModel: PickerViewModel = viewModel(factory = factory)
                 PickerNavHost(pickerViewModel)
             }
