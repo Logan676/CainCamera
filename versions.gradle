@@ -18,8 +18,8 @@ ext {
     cameraXVersion = '1.4.2'
     rxJavaVersion = '2.2.21'
     rxAndroidVersion = '2.1.1'
-    composeVersion = '1.5.4'
     composeCompilerVersion = '1.5.4'
     kotlinVersion = '1.9.22'
+    composeVersion = '1.6.0'
 }
 
