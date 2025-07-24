@@ -12,7 +12,7 @@ import android.view.Surface;
 
 import androidx.annotation.NonNull;
 
-import com.cgfay.caincamera.presenter.RecordPresenter;
+import com.cgfay.caincamera.viewmodel.RecordViewModel;
 import com.cgfay.filter.glfilter.adjust.GLImageMirrorFilter;
 import com.cgfay.filter.glfilter.base.GLImageFilter;
 import com.cgfay.filter.glfilter.base.GLImageOESInputFilter;
@@ -59,7 +59,7 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
     private float[] mMatrix = new float[16];
     // presenter
-    private final WeakReference<RecordPresenter> mWeakPresenter;
+    private final WeakReference<RecordViewModel> mWeakViewModel;
 
     // 同框类型
     private DuetType mDuetType;
@@ -88,8 +88,8 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
     // 视频播放器
     private MediaPlayer mMediaPlayer;
 
-    public DuetRecordRenderer(RecordPresenter presenter) {
-        mWeakPresenter = new WeakReference<>(presenter);
+    public DuetRecordRenderer(RecordViewModel viewModel) {
+        mWeakViewModel = new WeakReference<>(viewModel);
         mDuetType = DuetType.DUET_TYPE_NONE;
         mVideoInputTexture = OpenGLUtils.GL_NOT_TEXTURE;
         Matrix.setIdentityM(mMVPMatrix, 0);
@@ -125,8 +125,8 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
         GLES30.glEnable(GL10.GL_CULL_FACE);
         GLES30.glEnable(GL10.GL_DEPTH_TEST);
         initFilters();
-        if (mWeakPresenter.get() != null) {
-            mWeakPresenter.get().onBindSharedContext(EGL14.eglGetCurrentContext());
+        if (mWeakViewModel.get() != null) {
+            mWeakViewModel.get().onBindSharedContext(EGL14.eglGetCurrentContext());
         }
         initMediaPlayer();
     }
@@ -168,8 +168,8 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
         // 将最终的结果会是预览
         mImageFilter.drawFrame(currentTexture, mDisplayVertexBuffer, mDisplayTextureBuffer);
         // 录制视频
-        if (mWeakPresenter.get() != null) {
-            mWeakPresenter.get().onRecordFrameAvailable(currentTexture, timeStamp);
+        if (mWeakViewModel.get() != null) {
+            mWeakViewModel.get().onRecordFrameAvailable(currentTexture, timeStamp);
         }
     }
 
@@ -526,10 +526,10 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
      * 初始化滤镜
      */
     private void initFilters() {
-        mInputFilter = new GLImageOESInputFilter(mWeakPresenter.get().getActivity());
-        mVideoInputFilter = new GLImageOESInputFilter(mWeakPresenter.get().getActivity());
-        mDuetFilter = new GLImageDuetFilter(mWeakPresenter.get().getActivity());
-        mImageFilter = new GLImageMirrorFilter(mWeakPresenter.get().getActivity());
+        mInputFilter = new GLImageOESInputFilter(mWeakViewModel.get().getActivity());
+        mVideoInputFilter = new GLImageOESInputFilter(mWeakViewModel.get().getActivity());
+        mDuetFilter = new GLImageDuetFilter(mWeakViewModel.get().getActivity());
+        mImageFilter = new GLImageMirrorFilter(mWeakViewModel.get().getActivity());
     }
 
     /**
@@ -627,7 +627,7 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
         mVideoSurface = new Surface(mVideoSurfaceTexture);
         mMediaPlayer = new MediaPlayer();
         try {
-            mMediaPlayer.setDataSource(MediaMetadataUtils.getPath(mWeakPresenter.get().getActivity(), mDuetVideo.getContentUri()));
+            mMediaPlayer.setDataSource(MediaMetadataUtils.getPath(mWeakViewModel.get().getActivity(), mDuetVideo.getContentUri()));
             mMediaPlayer.setSurface(mVideoSurface);
             mMediaPlayer.setLooping(true);
             mMediaPlayer.prepare();
