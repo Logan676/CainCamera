@@ -25,7 +25,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,8 +36,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.caincamera.R
-import com.cgfay.caincamera.presenter.RecordPresenter
+import androidx.activity.viewModels
 import com.cgfay.caincamera.renderer.RecordRenderer
+import com.cgfay.caincamera.viewmodel.RecordViewModel
+import com.cgfay.caincamera.viewmodel.RecordViewModelFactory
 import com.cgfay.caincamera.widget.GLRecordView
 import com.cgfay.camera.widget.RecordButton
 import com.cgfay.camera.widget.RecordProgressView
@@ -60,7 +64,7 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
     private lateinit var recordButton: RecordButton
 
     private lateinit var renderer: RecordRenderer
-    private lateinit var presenter: RecordPresenter
+    private val viewModel: RecordViewModel by viewModels { RecordViewModelFactory(this) }
 
     private lateinit var btnSwitch: View
     private lateinit var btnNext: Button
@@ -68,11 +72,9 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presenter = RecordPresenter(this)
-        presenter.setRecordSeconds(15)
-        renderer = RecordRenderer(presenter)
+        renderer = RecordRenderer(viewModel.presenter)
         setContent {
-            SpeedRecordScreen(this, presenter, renderer)
+            SpeedRecordScreen(this, viewModel, renderer)
         }
     }
 
@@ -80,8 +82,8 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
         super.onResume()
         handleFullScreen()
         glRecordView.onResume()
-        presenter.onResume()
-        presenter.setAudioEnable(
+        viewModel.onResume()
+        viewModel.setAudioEnable(
             PermissionUtils.permissionChecking(this, android.Manifest.permission.RECORD_AUDIO)
         )
     }
@@ -89,12 +91,12 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
     override fun onPause() {
         super.onPause()
         glRecordView.onPause()
-        presenter.onPause()
+        viewModel.onPause()
         renderer.clear()
     }
 
     override fun onDestroy() {
-        presenter.release()
+        viewModel.release()
         super.onDestroy()
     }
 
@@ -117,42 +119,30 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun onClick(v: View) {
         when (v.id) {
-            R.id.btn_switch -> presenter.switchCamera()
-            R.id.btn_delete -> presenter.deleteLastVideo()
-            R.id.btn_next -> presenter.mergeAndEdit()
+            R.id.btn_switch -> viewModel.switchCamera()
+            R.id.btn_delete -> viewModel.deleteLastVideo()
+            R.id.btn_next -> viewModel.mergeAndEdit()
         }
     }
 
     override fun hideViews() {
-        runOnUiThread {
-            recordSpeedBar.visibility = View.GONE
-            btnDelete.visibility = View.GONE
-            btnNext.visibility = View.GONE
-            btnSwitch.visibility = View.GONE
-        }
+        viewModel.hideViews()
     }
 
     override fun showViews() {
-        runOnUiThread {
-            recordSpeedBar.visibility = View.VISIBLE
-            val showEditEnable = presenter.recordVideoSize > 0
-            btnDelete.visibility = if (showEditEnable) View.VISIBLE else View.GONE
-            btnNext.visibility = if (showEditEnable) View.VISIBLE else View.GONE
-            btnSwitch.visibility = View.VISIBLE
-            recordButton.reset()
-        }
+        viewModel.showViews(viewModel.presenter.recordVideoSize)
     }
 
     override fun setRecordProgress(progress: Float) {
-        runOnUiThread { progressView.progress = progress }
+        viewModel.setRecordProgress(progress)
     }
 
     override fun addProgressSegment(progress: Float) {
-        runOnUiThread { progressView.addProgressSegment(progress) }
+        viewModel.addProgressSegment(progress)
     }
 
     override fun deleteProgressSegment() {
-        runOnUiThread { progressView.deleteProgressSegment() }
+        viewModel.deleteProgressSegment()
     }
 
     override fun bindSurfaceTexture(surfaceTexture: SurfaceTexture) {
@@ -170,6 +160,7 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
     private var progressDialog: Dialog? = null
     override fun showProgressDialog() {
         runOnUiThread { progressDialog = ProgressDialog.show(this, "正在合成", "正在合成") }
+        viewModel.showProgressDialog()
     }
 
     override fun hideProgressDialog() {
@@ -177,6 +168,7 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
             progressDialog?.dismiss()
             progressDialog = null
         }
+        viewModel.hideProgressDialog()
     }
 
     private var toast: Toast? = null
@@ -231,11 +223,13 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 @Composable
 fun SpeedRecordScreen(
     activity: SpeedRecordActivity,
-    presenter: RecordPresenter,
+    viewModel: RecordViewModel,
     renderer: RecordRenderer
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
+
+    val uiState by viewModel.uiState.collectAsState()
 
     val glRecordView = remember {
         GLRecordView(context).apply {
@@ -250,10 +244,15 @@ fun SpeedRecordScreen(
         RecordProgressView(context).also { activity.progressView = it }
     }
 
+    LaunchedEffect(uiState.segments) {
+        progressView.clear()
+        uiState.segments.forEach { progressView.addProgressSegment(it) }
+    }
+
     val recordSpeedBar = remember {
         RecordSpeedLevelBar(context).apply {
             setOnSpeedChangedListener { speed ->
-                presenter.setSpeedMode(SpeedMode.valueOf(speed.speed))
+                viewModel.setSpeedMode(SpeedMode.valueOf(speed.speed))
             }
         }.also { activity.recordSpeedBar = it }
     }
@@ -261,8 +260,8 @@ fun SpeedRecordScreen(
     val recordButton = remember {
         RecordButton(context).apply {
             addRecordStateListener(object : RecordButton.RecordStateListener {
-                override fun onRecordStart() { presenter.startRecord() }
-                override fun onRecordStop() { presenter.stopRecord() }
+                override fun onRecordStart() { viewModel.startRecord() }
+                override fun onRecordStop() { viewModel.stopRecord() }
                 override fun onZoom(percent: Float) {}
             })
         }.also { activity.recordButton = it }
@@ -316,6 +315,7 @@ fun SpeedRecordScreen(
 
         AndroidView(
             factory = { progressView },
+            update = { it.setProgress(uiState.progress) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -328,6 +328,7 @@ fun SpeedRecordScreen(
 
         AndroidView(
             factory = { btnSwitch },
+            update = { view -> view.visibility = if (uiState.showSwitch) View.VISIBLE else View.GONE },
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(
@@ -338,6 +339,7 @@ fun SpeedRecordScreen(
 
         AndroidView(
             factory = { recordSpeedBar },
+            update = { view -> view.visibility = if (uiState.showSwitch) View.VISIBLE else View.GONE },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(
@@ -356,6 +358,7 @@ fun SpeedRecordScreen(
 
         AndroidView(
             factory = { btnDelete },
+            update = { view -> view.visibility = if (uiState.showDelete) View.VISIBLE else View.GONE },
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(end = dimensionResource(R.dimen.dp20))
@@ -363,6 +366,7 @@ fun SpeedRecordScreen(
 
         AndroidView(
             factory = { btnNext },
+            update = { view -> view.visibility = if (uiState.showNext) View.VISIBLE else View.GONE },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
         )
@@ -376,5 +380,5 @@ fun SpeedRecordScreen(
         }
     }
 
-    activity.showViews()
+    viewModel.showViews(viewModel.presenter.recordVideoSize)
 }

@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.caincamera.R
-import com.cgfay.caincamera.presenter.RecordPresenter
 import com.cgfay.caincamera.renderer.DuetRecordRenderer
 import com.cgfay.caincamera.renderer.DuetType
 import com.cgfay.caincamera.widget.GLRecordView
@@ -30,6 +29,10 @@ import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.resource.FilterHelper
 import com.cgfay.filter.glfilter.resource.ResourceJsonCodec
 import com.cgfay.media.recorder.SpeedMode
+import com.cgfay.caincamera.viewmodel.RecordViewModel
+import com.cgfay.caincamera.viewmodel.RecordViewModelFactory
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
 import com.cgfay.uitls.utils.NotchUtils
 import com.cgfay.uitls.utils.PermissionUtils
 import com.cgfay.uitls.utils.StatusBarUtils
@@ -48,7 +51,7 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     private lateinit var recordButton: RecordButton
 
     private lateinit var renderer: DuetRecordRenderer
-    private lateinit var presenter: RecordPresenter
+    private val viewModel: RecordViewModel by viewModels { RecordViewModelFactory(this) }
 
     private lateinit var btnSwitch: View
     private lateinit var btnNext: Button
@@ -59,12 +62,10 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presenter = RecordPresenter(this)
-        presenter.setRecordSeconds(15)
-        renderer = DuetRecordRenderer(presenter)
+        renderer = DuetRecordRenderer(viewModel.presenter)
         intent.getParcelableExtra<MediaData>(DUET_MEDIA)?.let { renderer.setDuetVideo(it) }
         setContent {
-            DuetRecordScreen { view -> setupViews(view) }
+            DuetRecordScreen(viewModel) { view -> setupViews(view) }
         }
     }
 
@@ -78,17 +79,17 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
         recordSpeedBar = root.findViewById(R.id.record_speed_bar)
         recordSpeedBar.visibility = View.GONE
         recordSpeedBar.setOnSpeedChangedListener { speed ->
-            presenter.setSpeedMode(SpeedMode.valueOf(speed.speed))
+            viewModel.setSpeedMode(SpeedMode.valueOf(speed.speed))
         }
 
         recordButton = root.findViewById(R.id.btn_record)
         recordButton.addRecordStateListener(object : RecordButton.RecordStateListener {
             override fun onRecordStart() {
-                presenter.startRecord()
+                viewModel.startRecord()
                 renderer.playVideo()
             }
             override fun onRecordStop() {
-                presenter.stopRecord()
+                viewModel.stopRecord()
                 renderer.stopVideo()
             }
             override fun onZoom(percent: Float) {}
@@ -116,15 +117,15 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
             params.height = StatusBarUtils.getStatusBarHeight(this)
             view.layoutParams = params
         }
-        showViews()
+        viewModel.showViews(viewModel.presenter.recordVideoSize)
     }
 
     override fun onResume() {
         super.onResume()
         handleFullScreen()
         glRecordView.onResume()
-        presenter.onResume()
-        presenter.setAudioEnable(
+        viewModel.onResume()
+        viewModel.setAudioEnable(
             PermissionUtils.permissionChecking(this, android.Manifest.permission.RECORD_AUDIO)
         )
     }
@@ -132,12 +133,12 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     override fun onPause() {
         super.onPause()
         glRecordView.onPause()
-        presenter.onPause()
+        viewModel.onPause()
         renderer.clear()
     }
 
     override fun onDestroy() {
-        presenter.release()
+        viewModel.release()
         super.onDestroy()
     }
 
@@ -160,9 +161,9 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun onClick(v: View) {
         when (v.id) {
-            R.id.btn_switch -> presenter.switchCamera()
-            R.id.btn_delete -> presenter.deleteLastVideo()
-            R.id.btn_next -> presenter.mergeAndEdit()
+            R.id.btn_switch -> viewModel.switchCamera()
+            R.id.btn_delete -> viewModel.deleteLastVideo()
+            R.id.btn_next -> viewModel.mergeAndEdit()
             R.id.btn_next_duet -> {
                 layoutDuetType.visibility = View.VISIBLE
                 btnDuet.visibility = View.GONE
@@ -182,33 +183,23 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     }
 
     override fun hideViews() {
-        runOnUiThread {
-            btnDelete.visibility = View.GONE
-            btnNext.visibility = View.GONE
-            btnSwitch.visibility = View.GONE
-        }
+        viewModel.hideViews()
     }
 
     override fun showViews() {
-        runOnUiThread {
-            val showEditEnable = presenter.recordVideoSize > 0
-            btnDelete.visibility = if (showEditEnable) View.VISIBLE else View.GONE
-            btnNext.visibility = if (showEditEnable) View.VISIBLE else View.GONE
-            btnSwitch.visibility = View.VISIBLE
-            recordButton.reset()
-        }
+        viewModel.showViews(viewModel.presenter.recordVideoSize)
     }
 
     override fun setRecordProgress(progress: Float) {
-        runOnUiThread { progressView.progress = progress }
+        viewModel.setRecordProgress(progress)
     }
 
     override fun addProgressSegment(progress: Float) {
-        runOnUiThread { progressView.addProgressSegment(progress) }
+        viewModel.addProgressSegment(progress)
     }
 
     override fun deleteProgressSegment() {
-        runOnUiThread { progressView.deleteProgressSegment() }
+        viewModel.deleteProgressSegment()
     }
 
     override fun bindSurfaceTexture(surfaceTexture: SurfaceTexture) {
@@ -226,6 +217,7 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     private var progressDialog: Dialog? = null
     override fun showProgressDialog() {
         runOnUiThread { progressDialog = ProgressDialog.show(this, "正在合成", "正在合成") }
+        viewModel.showProgressDialog()
     }
 
     override fun hideProgressDialog() {
@@ -233,6 +225,7 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
             progressDialog?.dismiss()
             progressDialog = null
         }
+        viewModel.hideProgressDialog()
     }
 
     private var toast: Toast? = null
@@ -283,12 +276,23 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
 }
 
 @Composable
-fun DuetRecordScreen(onViewCreated: (View) -> Unit) {
+fun DuetRecordScreen(viewModel: RecordViewModel, onViewCreated: (View) -> Unit) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
     AndroidView(
         factory = { ctx ->
             LayoutInflater.from(ctx).inflate(R.layout.activity_duet_record, null, false).apply {
                 onViewCreated(this)
+            }
+        },
+        update = { view ->
+            view.findViewById<View>(R.id.btn_switch).visibility = if (uiState.showSwitch) View.VISIBLE else View.GONE
+            view.findViewById<View>(R.id.btn_delete).visibility = if (uiState.showDelete) View.VISIBLE else View.GONE
+            view.findViewById<View>(R.id.btn_next).visibility = if (uiState.showNext) View.VISIBLE else View.GONE
+            view.findViewById<RecordProgressView>(R.id.record_progress_view).apply {
+                clear()
+                uiState.segments.forEach { addProgressSegment(it) }
+                setProgress(uiState.progress)
             }
         },
         modifier = Modifier
