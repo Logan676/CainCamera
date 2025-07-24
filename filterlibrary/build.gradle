@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace 'com.cgfay.filterlibrary'
     compileSdkVersion 34
     buildToolsVersion '34.0.0'
 
