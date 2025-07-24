@@ -29,6 +29,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import androidx.compose.ui.platform.ComposeView;
+import kotlin.Unit;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -42,6 +44,7 @@ import com.cgfay.camera.widget.PreviewMeasureListener;
 import com.cgfay.camera.widget.RecordButton;
 import com.cgfay.camera.widget.RecordCountDownView;
 import com.cgfay.camera.widget.RecordProgressView;
+import com.cgfay.camera.compose.PreviewEffectScreen;
 import com.cgfay.cameralibrary.R;
 import com.cgfay.camera.camera.CameraParam;
 import com.cgfay.camera.model.GalleryType;
@@ -118,8 +121,8 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     private FrameLayout mFragmentContainer;
     // 贴纸资源页面
     private PreviewResourceFragment mResourcesFragment;
-    // 滤镜页面
-    private PreviewEffectFragment mEffectFragment;
+    // 滤镜页面(Compose)
+    private View mEffectComposeView;
     // 更多设置界面
     private PreviewSettingFragment mSettingFragment;
 
@@ -415,7 +418,7 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
      */
     public boolean onBackPressed() {
         Fragment fragment = getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (fragment != null) {
+        if (fragment != null || mEffectComposeView != null) {
             hideFragmentAnimating();
             return true;
         }
@@ -546,29 +549,22 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
         if (mFragmentAnimating) {
             return;
         }
-        if (mEffectFragment == null) {
-            mEffectFragment = new PreviewEffectFragment();
-        }
-        mEffectFragment.addOnCompareEffectListener(compare -> {
-            mPreviewPresenter.showCompare(compare);
-        });
-        mEffectFragment.addOnFilterChangeListener(color -> {
-            mPreviewPresenter.changeDynamicFilter(color);
-        });
-        mEffectFragment.addOnMakeupChangeListener(makeup -> {
-            mPreviewPresenter.changeDynamicMakeup(makeup);
-        });
-        mEffectFragment.scrollToCurrentFilter(mPreviewPresenter.getFilterIndex());
-        if (!mEffectFragment.isAdded()) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_bottom_container, mEffectFragment, FRAGMENT_TAG)
-                    .commitAllowingStateLoss();
+        if (mEffectComposeView == null) {
+            ComposeView composeView = new ComposeView(mActivity);
+            composeView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            composeView.setContent(() -> {
+                PreviewEffectScreen(
+                        compare -> mPreviewPresenter.showCompare(compare),
+                        color -> mPreviewPresenter.changeDynamicFilter(color),
+                        makeup -> mPreviewPresenter.changeDynamicMakeup(makeup),
+                        mPreviewPresenter.getFilterIndex()
+                );
+                return Unit.INSTANCE;
+            });
+            mEffectComposeView = composeView;
+            mFragmentContainer.addView(mEffectComposeView);
         } else {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .show(mEffectFragment)
-                    .commitAllowingStateLoss();
+            mEffectComposeView.setVisibility(View.VISIBLE);
         }
         showFragmentAnimating();
     }
@@ -654,6 +650,10 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
                     .beginTransaction()
                     .remove(fragment)
                     .commitAllowingStateLoss();
+        }
+        if (mEffectComposeView != null) {
+            mFragmentContainer.removeView(mEffectComposeView);
+            mEffectComposeView = null;
         }
     }
 
