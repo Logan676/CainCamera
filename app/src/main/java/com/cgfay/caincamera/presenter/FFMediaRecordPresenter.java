@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import com.cgfay.caincamera.fragment.FFMediaRecordFragment;
+import com.cgfay.caincamera.ui.FFMediaRecordView;
 import com.cgfay.camera.camera.CameraApi;
 import com.cgfay.camera.camera.CameraController;
 import com.cgfay.camera.camera.CameraXController;
@@ -43,7 +43,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
     private static final boolean VERBOSE = true;
 
     private FragmentActivity mActivity;
-    private FFMediaRecordFragment mFragment;
+    private FFMediaRecordView mView;
 
     // 命令行编辑器
     private CainCommandEditor mCommandEditor;
@@ -64,9 +64,9 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
 
     private final ICameraController mCameraController;
 
-    public FFMediaRecordPresenter(FragmentActivity activity, FFMediaRecordFragment fragment) {
+    public FFMediaRecordPresenter(FragmentActivity activity, FFMediaRecordView view) {
         mActivity = activity;
-        mFragment = fragment;
+        mView = view;
         mIsRecording = false;
         mPreviewRotate = 0;
         // 命令行编辑器
@@ -221,7 +221,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
         if (VERBOSE) {
             Log.d(TAG, "onRecordStart: ");
         }
-        mFragment.hidViews();
+        mView.hidViews();
         mIsRecording = true;
     }
 
@@ -231,7 +231,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
             Log.d(TAG, "onRecording: " + duration);
         }
         float progress = duration / mMaxDuration;
-        mFragment.setProgress(progress);
+        mView.setProgress(progress);
         if (duration > mRemainDuration) {
             stopRecord();
         }
@@ -245,11 +245,11 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
                 mVideoList.add(new VideoInfo(mMediaRecorder.getOutput(), duration));
                 mRemainDuration = mRemainDuration - (int)duration;
                 float currentProgress = duration / mMaxDuration;
-                mFragment.addProgressSegment(currentProgress);
+                mView.addProgressSegment(currentProgress);
             }
         }
-        mFragment.showViews();
-        mFragment.showToast("录制成功");
+        mView.showViews();
+        mView.showToast("录制成功");
         if (VERBOSE) {
             Log.d(TAG, "onRecordFinish: " + success + ", duration：" + duration);
         }
@@ -260,7 +260,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
         if (VERBOSE) {
             Log.d(TAG, "onRecordError: ");
         }
-        mFragment.showToast(msg);
+        mView.showToast(msg);
         if (mMediaRecorder != null) {
             mMediaRecorder.release();
             mMediaRecorder = null;
@@ -269,12 +269,12 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
 
     @Override
     public void onSurfaceTexturePrepared(@NonNull SurfaceTexture surfaceTexture) {
-        mFragment.bindSurfaceTexture(surfaceTexture);
+        mView.bindSurfaceTexture(surfaceTexture);
     }
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        mFragment.onFrameAvailable();
+        mView.onFrameAvailable();
     }
 
     @Override
@@ -303,7 +303,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
                 mVideoList.remove(index);
             }
         }
-        mFragment.deleteProgressSegment();
+        mView.deleteProgressSegment();
     }
 
     /**
@@ -333,7 +333,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
             height = mRecordHeight;
         }
 
-        mFragment.updateTextureSize(width, height);
+        mView.updateTextureSize(width, height);
     }
 
     /**
@@ -365,7 +365,7 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
             intent.putExtra(VideoEditActivity.VIDEO_PATH, outputPath);
             mActivity.startActivity(intent);
         } else {
-            mFragment.showProgressDialog();
+            mView.showProgressDialog();
             List<String> videos = new ArrayList<>();
             for (VideoInfo info : mVideoList) {
                 if (info != null && !TextUtils.isEmpty(info.getFileName())) {
@@ -375,13 +375,13 @@ public class FFMediaRecordPresenter implements PreviewCallback, FFAudioRecorder.
             String finalPath = generateOutputPath();
             mCommandEditor.execCommand(CainCommandEditor.concatVideo(mActivity, videos, finalPath),
                     (result) -> {
-                        mFragment.hideProgressDialog();
+                        mView.hideProgressDialog();
                         if (result == 0) {
                             Intent intent = new Intent(mActivity, VideoEditActivity.class);
                             intent.putExtra(VideoEditActivity.VIDEO_PATH, finalPath);
                             mActivity.startActivity(intent);
                         } else {
-                            mFragment.showToast("合成失败");
+                            mView.showToast("合成失败");
                         }
                     });
         }

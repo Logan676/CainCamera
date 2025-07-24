@@ -20,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.cgfay.caincamera.R
 import com.cgfay.camera.PreviewEngine
 import com.cgfay.camera.fragment.NormalMediaSelector
@@ -37,10 +40,10 @@ import com.cgfay.uitls.utils.PermissionUtils
 import com.cgfay.video.activity.VideoEditActivity
 import com.cgfay.caincamera.activity.SpeedRecordActivity
 import com.cgfay.caincamera.activity.MusicMergeActivity
-import com.cgfay.caincamera.activity.FFMediaRecordActivity
 import com.cgfay.caincamera.activity.MusicPlayerActivity
 import com.cgfay.caincamera.activity.VideoPlayerActivity
 import com.cgfay.caincamera.activity.DuetRecordActivity
+import com.cgfay.caincamera.ui.FFMediaRecordScreen
 
 class MainActivity : ComponentActivity() {
     private var mOnClick = false
@@ -52,19 +55,7 @@ class MainActivity : ComponentActivity() {
         if (PermissionUtils.permissionChecking(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             initResources()
         }
-        setContent {
-            MainScreen(
-                onCamera = { onDebounced { previewCamera() } },
-                onEditVideo = { onDebounced { scanMedia(false, true) } },
-                onEditPicture = { onDebounced { scanMedia(true, false) } },
-                onSpeedRecord = { onDebounced { startActivity(Intent(this, SpeedRecordActivity::class.java)) } },
-                onMusicMerge = { onDebounced { musicMerge() } },
-                onFFMediaRecord = { onDebounced { ffmpegRecord() } },
-                onMusicPlayer = { onDebounced { musicPlayerTest() } },
-                onVideoPlayer = { onDebounced { videoPlayerTest() } },
-                onDuetRecord = { onDebounced { duetRecord() } }
-            )
-        }
+        setContent { MainNavGraph() }
     }
 
     private fun onDebounced(action: () -> Unit) {
@@ -110,7 +101,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /** 打开预览页面 */
-    private fun previewCamera() {
+    fun previewCamera() {
         if (PermissionUtils.permissionChecking(this, Manifest.permission.CAMERA)) {
             PreviewEngine.from(this)
                 .setCameraRatio(AspectRatio.Ratio_16_9)
@@ -136,7 +127,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /** 扫描媒体库 */
-    private fun scanMedia(enableImage: Boolean, enableVideo: Boolean) {
+    fun scanMedia(enableImage: Boolean, enableVideo: Boolean) {
         MediaPicker.from(this)
             .showImage(enableImage)
             .showVideo(enableVideo)
@@ -145,7 +136,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /** 音视频混合 */
-    private fun musicMerge() {
+    fun musicMerge() {
         MediaPicker.from(this)
             .showCapture(true)
             .showImage(false)
@@ -164,16 +155,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** 使用FFmpeg 录制视频 */
-    private fun ffmpegRecord() {
-        startActivity(Intent(this, FFMediaRecordActivity::class.java))
-    }
 
-    private fun musicPlayerTest() {
+    fun musicPlayerTest() {
         startActivity(Intent(this, MusicPlayerActivity::class.java))
     }
 
-    private fun videoPlayerTest() {
+    fun videoPlayerTest() {
         MediaPicker.from(this)
             .showCapture(true)
             .showImage(false)
@@ -192,7 +179,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun duetRecord() {
+    fun duetRecord() {
         MediaPicker.from(this)
             .showImage(false)
             .showVideo(true)
@@ -205,7 +192,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /** 模拟同框录制 */
-    private fun onDuetRecord(mediaData: MediaData) {
+    fun onDuetRecord(mediaData: MediaData) {
         val intent = Intent(this, DuetRecordActivity::class.java)
         intent.putExtra(DuetRecordActivity.DUET_MEDIA, mediaData)
         startActivity(intent)
@@ -214,6 +201,29 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val REQUEST_CODE = 0
         private const val DELAY_CLICK = 500
+    }
+}
+
+@Composable
+fun MainActivity.MainNavGraph() {
+    val navController = rememberNavController()
+    NavHost(navController, startDestination = "main") {
+        composable("main") {
+            MainScreen(
+                onCamera = { previewCamera() },
+                onEditVideo = { scanMedia(false, true) },
+                onEditPicture = { scanMedia(true, false) },
+                onSpeedRecord = { startActivity(Intent(this@MainActivity, SpeedRecordActivity::class.java)) },
+                onMusicMerge = { musicMerge() },
+                onFFMediaRecord = { navController.navigate("ffrecord") },
+                onMusicPlayer = { musicPlayerTest() },
+                onVideoPlayer = { videoPlayerTest() },
+                onDuetRecord = { duetRecord() }
+            )
+        }
+        composable("ffrecord") {
+            FFMediaRecordScreen { navController.popBackStack() }
+        }
     }
 }
 
