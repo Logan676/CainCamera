@@ -9,16 +9,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.cgfay.video.widget.VideoCutViewBar
-import com.cgfay.video.widget.VideoSpeedLevelBar
-import com.cgfay.video.widget.VideoTextureView
+import com.cgfay.video.compose.widget.VideoCutBar
+import com.cgfay.video.compose.widget.VideoSpeedLevelBar
+import com.cgfay.video.compose.widget.VideoTexture
 
 @Composable
 fun VideoCutNavGraph(videoPath: String?, onFinish: () -> Unit) {
@@ -41,12 +40,12 @@ fun VideoCutScreen(path: String, onBack: () -> Unit, viewModel: VideoCutViewMode
 
     Box(modifier = Modifier.fillMaxSize()) {
         // video preview
-        AndroidView(factory = { context -> VideoTextureView(context) }, modifier = Modifier.fillMaxSize())
+        VideoTexture(modifier = Modifier.fillMaxSize())
 
         // bottom controls
         Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-            AndroidView(factory = { context -> VideoSpeedLevelBar(context) }, modifier = Modifier.fillMaxWidth())
-            AndroidView(factory = { context -> VideoCutViewBar(context) }, modifier = Modifier.fillMaxWidth().height(70.dp))
+            VideoSpeedLevelBar(modifier = Modifier.fillMaxWidth())
+            VideoCutBar(modifier = Modifier.fillMaxWidth().height(70.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

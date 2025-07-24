@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,7 +18,7 @@ import androidx.navigation.navArgument
 import com.cgfay.video.bean.EffectMimeType
 import com.cgfay.video.compose.EffectCategoryBar
 import com.cgfay.video.compose.VideoEffectList
-import com.cgfay.video.widget.VideoTextureView
+import com.cgfay.video.compose.widget.VideoTexture
 
 @Composable
 fun VideoEditNavGraph(videoPath: String?, onFinish: () -> Unit) {
@@ -49,7 +48,7 @@ fun VideoEditScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
-            AndroidView(factory = { context -> VideoTextureView(context) }, modifier = Modifier.fillMaxSize())
+            VideoTexture(modifier = Modifier.fillMaxSize())
         }
         EffectCategoryBar(selected = category, onSelected = { viewModel.selectCategory(it) }, modifier = Modifier.fillMaxWidth())
         VideoEffectList(effects = effects, selectedIndex = selectedIndex, onSelected = { index, effect -> viewModel.selectEffect(index) }, modifier = Modifier.height(80.dp).fillMaxWidth())
