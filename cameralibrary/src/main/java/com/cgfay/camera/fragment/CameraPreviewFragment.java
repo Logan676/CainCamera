@@ -2,6 +2,7 @@ package com.cgfay.camera.fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -51,9 +52,6 @@ import com.cgfay.picker.MediaPicker;
 import com.cgfay.picker.loader.AlbumDataLoader;
 import com.cgfay.picker.model.AlbumData;
 import com.cgfay.uitls.bean.MusicData;
-import com.cgfay.uitls.dialog.DialogBuilder;
-import com.cgfay.uitls.dialog.DialogComponent;
-import com.cgfay.uitls.dialog.DialogType;
 import com.cgfay.uitls.fragment.MusicPickerFragment;
 import com.cgfay.uitls.fragment.PermissionErrorDialogFragment;
 import com.cgfay.uitls.utils.BrightnessUtils;
@@ -1056,16 +1054,14 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
      */
     private void deleteRecordedVideo() {
         dismissDialog();
-        mDialog = DialogBuilder.from(mActivity, DialogType.TWO_BUTTON)
-                .setText(DialogComponent.TITLE, R.string.delete_last_video_tips)
-                .setText(DialogComponent.CANCEL_BUTTON, R.string.btn_dialog_cancel)
-                .setDismissOnClick(DialogComponent.CANCEL_BUTTON, true)
-                .setText(DialogComponent.OK_BUTTON, R.string.btn_delete)
-                .setDismissOnClick(DialogComponent.OK_BUTTON, true)
-                .setOnClickListener(DialogComponent.OK_BUTTON, v -> {
-                    mPreviewPresenter.deleteLastVideo();
-                })
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity, R.style.CommonDialogStyle);
+        builder.setMessage(R.string.delete_last_video_tips);
+        builder.setNegativeButton(R.string.btn_dialog_cancel, (dialog, which) -> dialog.dismiss());
+        builder.setPositiveButton(R.string.btn_delete, (dialog, which) -> {
+            dialog.dismiss();
+            mPreviewPresenter.deleteLastVideo();
+        });
+        mDialog = builder.show();
     }
 
     /**

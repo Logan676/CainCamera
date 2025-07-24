@@ -1,12 +1,17 @@
 package com.cgfay.uitls.fragment
 
 import android.app.Activity
-import android.app.Dialog
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.DialogFragment
-import com.cgfay.uitls.dialog.DialogBuilder
-import com.cgfay.uitls.dialog.DialogComponent
-import com.cgfay.uitls.dialog.DialogType
 import com.cgfay.utilslibrary.R
 
 /**
@@ -17,21 +22,30 @@ class PermissionErrorDialogFragment : DialogFragment() {
     private var errorForceClose = false
     private var requestCode: Int = 0
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val activity = requireActivity()
         requestCode = requireArguments().getInt(REQUEST_CODE)
         errorForceClose = requireArguments().getBoolean(ERROR_CLOSE)
-        return DialogBuilder.from(activity, DialogType.TWO_BUTTON)
-            .setText(DialogComponent.TITLE, requireArguments().getString(ARG_MESSAGE))
-            .setText(DialogComponent.CANCEL_BUTTON, "取消")
-            .setDismissOnClick(DialogComponent.CANCEL_BUTTON, true)
-            .setText(DialogComponent.OK_BUTTON, "确定")
-            .setOnClickListener(DialogComponent.OK_BUTTON) {
-                if (errorForceClose) {
-                    activity.finish()
-                }
+        val message = requireArguments().getString(ARG_MESSAGE) ?: ""
+        return ComposeView(requireContext()).apply {
+            setContent {
+                PermissionErrorDialog(
+                    message = message,
+                    onConfirm = {
+                        if (errorForceClose) {
+                            activity.finish()
+                        }
+                        dismiss()
+                    },
+                    onDismiss = { dismiss() }
+                )
             }
-            .create()
+        }
+    }
     }
 
     companion object {
@@ -50,4 +64,22 @@ class PermissionErrorDialogFragment : DialogFragment() {
             return dialog
         }
     }
+}
+
+@Composable
+private fun PermissionErrorDialog(
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = { Text(text = message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(text = stringResource(android.R.string.ok)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = stringResource(android.R.string.cancel)) }
+        }
+    )
 }
