@@ -41,7 +41,7 @@ public class CameraXController implements ICameraController {
     // 预览角度
     private int mRotation;
 
-    // 生命周期对象(Fragment/Activity)
+    // Activity lifecycle owner used for CameraX
     private final FragmentActivity mLifecycleOwner;
 
     // 是否打开前置摄像头

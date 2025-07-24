@@ -22,6 +22,7 @@ A non-linear editing SDK is under development.
 
 ## Update Log
 **2021-04-05**: Upgraded CameraX to `1.0.0-rc03`. Basic face detection and beauty features are adapted, but some CameraX functions are still missing. After finishing the non-linear editing SDK I plan to integrate [MediaPipe](https://github.com/google/mediapipe) to replace the current face SDK.
+**2023-08-01**: Began migrating screens to Jetpack Compose. Fragment-based APIs are still supported for legacy modules, but new activities use composable screens by default.
 
 # About Face SDK Verification
 The face keypoint SDK uses a trial version of Face++ and has a limited number of daily uses. Please register your own key at [Face++](https://www.faceplusplus.com/) and bind your package name before use. Mainland users should register at [https://www.faceplusplus.com.cn/](https://www.faceplusplus.com.cn/). Registration steps:
