@@ -7,6 +7,7 @@ def platformVersion = rootProject.ext.minSdkVersion    // 18: openGLES 3 min api
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
+    namespace 'com.cgfay.media'
 
     defaultConfig {
         minSdkVersion "${platformVersion}"
