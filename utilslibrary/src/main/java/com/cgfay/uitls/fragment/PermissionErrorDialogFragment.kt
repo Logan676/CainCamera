@@ -5,6 +5,8 @@ import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import com.cgfay.uitls.dialog.DialogBuilder
+import com.cgfay.uitls.dialog.DialogComponent
+import com.cgfay.uitls.dialog.DialogType
 import com.cgfay.utilslibrary.R
 
 /**
@@ -19,12 +21,12 @@ class PermissionErrorDialogFragment : DialogFragment() {
         val activity = requireActivity()
         requestCode = requireArguments().getInt(REQUEST_CODE)
         errorForceClose = requireArguments().getBoolean(ERROR_CLOSE)
-        return DialogBuilder.from(activity, R.layout.dialog_two_button)
-            .setText(R.id.tv_dialog_title, requireArguments().getString(ARG_MESSAGE))
-            .setText(R.id.btn_dialog_cancel, "取消")
-            .setDismissOnClick(R.id.btn_dialog_cancel, true)
-            .setText(R.id.btn_dialog_ok, "确定")
-            .setOnClickListener(R.id.btn_dialog_ok) {
+        return DialogBuilder.from(activity, DialogType.TWO_BUTTON)
+            .setText(DialogComponent.TITLE, requireArguments().getString(ARG_MESSAGE))
+            .setText(DialogComponent.CANCEL_BUTTON, "取消")
+            .setDismissOnClick(DialogComponent.CANCEL_BUTTON, true)
+            .setText(DialogComponent.OK_BUTTON, "确定")
+            .setOnClickListener(DialogComponent.OK_BUTTON) {
                 if (errorForceClose) {
                     activity.finish()
                 }
