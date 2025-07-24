@@ -34,6 +34,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.compose.ui.platform.ComposeView;
+import com.cgfay.camera.compose.PreviewSettingScreen;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+
 import com.cgfay.camera.loader.impl.CameraMediaLoader;
 import com.cgfay.camera.presenter.CameraPreviewPresenter;
 import com.cgfay.camera.widget.CameraTextureView;
@@ -120,8 +125,8 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     private PreviewResourceFragment mResourcesFragment;
     // 滤镜页面
     private PreviewEffectFragment mEffectFragment;
-    // 更多设置界面
-    private PreviewSettingFragment mSettingFragment;
+    // 设置界面 ComposeView
+    private ComposeView mSettingView;
 
     private final Handler mMainHandler;
     private FragmentActivity mActivity;
@@ -492,23 +497,37 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
         if (mFragmentAnimating) {
             return;
         }
-        if (mSettingFragment == null) {
-            mSettingFragment = new PreviewSettingFragment();
+        if (mSettingView == null) {
+            mSettingView = new ComposeView(mActivity);
+            mSettingView.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
         }
-        mSettingFragment.addStateChangedListener(mStateChangedListener);
-        mSettingFragment.setEnableChangeFlash(mCameraParam.supportFlash);
-        if (!mSettingFragment.isAdded()) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_bottom_container, mSettingFragment, FRAGMENT_TAG)
-                    .addToBackStack(FRAGMENT_TAG)
-                    .commitAllowingStateLoss();
-        } else {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .show(mSettingFragment)
-                    .commitAllowingStateLoss();
-        }
+        mSettingView.setContent(new Function0<Unit>() {
+            @Override
+            public Unit invoke() {
+                PreviewSettingScreen(
+                        mCameraParam.supportFlash,
+                        false,
+                        mCameraParam.touchTake,
+                        mCameraParam.takeDelay,
+                        mCameraParam.luminousEnhancement,
+                        false,
+                        flashOn -> mPreviewPresenter.changeFlashLight(flashOn),
+                        touchTake -> mCameraParam.touchTake = touchTake,
+                        enable -> mCameraParam.takeDelay = enable,
+                        () -> mPreviewPresenter.onOpenCameraSettingPage(),
+                        enable -> {
+                            mCameraParam.luminousEnhancement = enable;
+                            enhancementBrightness();
+                        },
+                        enable -> mPreviewPresenter.enableEdgeBlurFilter(enable)
+                );
+                return Unit.INSTANCE;
+            }
+        });
+        mFragmentContainer.removeAllViews();
+        mFragmentContainer.addView(mSettingView);
         showFragmentAnimating();
     }
 
@@ -648,6 +667,8 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
      * 移除Fragment
      */
     private void removeFragment() {
+        mFragmentContainer.removeAllViews();
+        mSettingView = null;
         Fragment fragment = getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
         if (fragment != null) {
             getChildFragmentManager()
@@ -968,41 +989,6 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
         }
     };
 
-    // ----------------------------------- 顶部状态栏点击回调 ------------------------------------
-    private PreviewSettingFragment.StateChangedListener mStateChangedListener = new PreviewSettingFragment.StateChangedListener() {
-
-        @Override
-        public void flashStateChanged(boolean flashOn) {
-            // todo 闪光灯切换
-            mPreviewPresenter.changeFlashLight(flashOn);
-        }
-
-        @Override
-        public void onOpenCameraSetting() {
-            mPreviewPresenter.onOpenCameraSettingPage();
-        }
-
-        @Override
-        public void delayTakenChanged(boolean enable) {
-            mCameraParam.takeDelay = enable;
-        }
-
-        @Override
-        public void luminousCompensationChanged(boolean enable) {
-            mCameraParam.luminousEnhancement = enable;
-            enhancementBrightness();
-        }
-
-        @Override
-        public void touchTakenChanged(boolean touchTake) {
-            mCameraParam.touchTake = touchTake;
-        }
-
-        @Override
-        public void changeEdgeBlur(boolean enable) {
-            mPreviewPresenter.enableEdgeBlurFilter(enable);
-        }
-    };
 
     /**
      * 显示fps
