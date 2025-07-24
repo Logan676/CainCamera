@@ -5,31 +5,26 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cgfay.picker.model.MediaData
 import com.cgfay.scan.R
 import coil.compose.AsyncImage
 
 @Composable
 fun MediaPickerScreen(
-    onPreview: (Int) -> Unit,
+    onPreview: (MediaData) -> Unit,
     onShowAlbums: () -> Unit,
-    viewModel: PickerViewModel = viewModel()
+    viewModel: PickerViewModel
 ) {
     val mediaList by viewModel.mediaList.collectAsState()
     val selected by viewModel.selectedMedia.collectAsState()
     val album by viewModel.selectedAlbum.collectAsState()
+    val currentTab by viewModel.currentTab.collectAsState()
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text(album?.displayName ?: "Media Picker") },
@@ -52,16 +47,32 @@ fun MediaPickerScreen(
                 }
             }
         )
-        LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.weight(1f)) {
+        TabRow(selectedTabIndex = currentTab) {
+            if (!viewModel.pickerParam.showVideoOnly()) {
+                Tab(selected = currentTab == 0, onClick = { viewModel.selectTab(0) }) {
+                    Text("Images", modifier = Modifier.padding(12.dp))
+                }
+            }
+            if (!viewModel.pickerParam.showImageOnly()) {
+                val index = if (viewModel.pickerParam.showVideoOnly()) 0 else 1
+                Tab(selected = currentTab == index, onClick = { viewModel.selectTab(index) }) {
+                    Text("Videos", modifier = Modifier.padding(12.dp))
+                }
+            }
+        }
+        LazyVerticalGrid(columns = GridCells.Fixed(viewModel.pickerParam.spanCount), modifier = Modifier.weight(1f)) {
             items(mediaList) { media ->
                 Box(modifier = Modifier
                     .padding(2.dp)
-                    .clickable { onPreview(media) }, contentAlignment = Alignment.Center) {
+                    .clickable { viewModel.toggle(media) }, contentAlignment = Alignment.Center) {
                     AsyncImage(
-                        model = media,
+                        model = media.contentUri,
                         contentDescription = null,
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.fillMaxWidth().aspectRatio(1f)
                     )
+                    if (selected.contains(media)) {
+                        Text("\u2713", modifier = Modifier.align(Alignment.TopEnd).padding(4.dp))
+                    }
                 }
             }
         }

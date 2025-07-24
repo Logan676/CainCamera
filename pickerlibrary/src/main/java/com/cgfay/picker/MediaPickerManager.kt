@@ -7,6 +7,7 @@ import com.cgfay.picker.loader.MediaLoader
  */
 class MediaPickerManager private constructor() {
     var mediaLoader: MediaLoader = PickerMediaLoader()
+    var mediaSelector: com.cgfay.picker.selector.OnMediaSelector? = null
 
     fun setMediaLoader(loader: MediaLoader): MediaPickerManager {
         mediaLoader = loader
@@ -15,6 +16,7 @@ class MediaPickerManager private constructor() {
 
     fun reset() {
         mediaLoader = PickerMediaLoader()
+        mediaSelector = null
     }
 
     companion object {

@@ -16,7 +16,7 @@ class PickerComposeActivity : ComponentActivity() {
         }
         setContent {
             MaterialTheme {
-                PickerNavHost()
+                PickerNavHost(this, pickerParam)
             }
         }
     }

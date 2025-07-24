@@ -38,7 +38,10 @@ class MediaPickerBuilder(private val mediaPicker: MediaPicker) {
         MediaPickerManager.getInstance().setMediaLoader(loader)
     }
 
-    fun setMediaSelector(selector: OnMediaSelector) = apply { mediaSelector = selector }
+    fun setMediaSelector(selector: OnMediaSelector) = apply {
+        mediaSelector = selector
+        MediaPickerManager.getInstance().mediaSelector = selector
+    }
 
     fun show() {
         val activity: FragmentActivity = mediaPicker.activity ?: return
