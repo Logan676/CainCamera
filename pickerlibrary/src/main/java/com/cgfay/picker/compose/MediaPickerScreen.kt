@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ fun MediaPickerScreen(
     val mediaList by viewModel.mediaList.collectAsState()
     val selected by viewModel.selectedMedia.collectAsState()
     val album by viewModel.selectedAlbum.collectAsState()
+    val tab by viewModel.selectedTab.collectAsState()
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text(album?.displayName ?: "Media Picker") },
@@ -52,6 +55,18 @@ fun MediaPickerScreen(
                 }
             }
         )
+        TabRow(selectedTabIndex = tab.ordinal) {
+            Tab(
+                selected = tab == PickerTab.IMAGE,
+                onClick = { viewModel.selectTab(PickerTab.IMAGE) },
+                text = { Text("Images") }
+            )
+            Tab(
+                selected = tab == PickerTab.VIDEO,
+                onClick = { viewModel.selectTab(PickerTab.VIDEO) },
+                text = { Text("Videos") }
+            )
+        }
         LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.weight(1f)) {
             items(mediaList) { media ->
                 Box(
