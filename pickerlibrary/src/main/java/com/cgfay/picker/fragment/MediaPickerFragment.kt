@@ -15,6 +15,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,17 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.loader.app.LoaderManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.cgfay.picker.MediaPicker
 import com.cgfay.picker.MediaPickerParam
-import com.cgfay.picker.adapter.AlbumDataAdapter
-import com.cgfay.picker.adapter.AlbumItemDecoration
 import com.cgfay.picker.adapter.MediaDataPagerAdapter
 import com.cgfay.picker.model.AlbumData
 import com.cgfay.picker.model.MediaData
@@ -41,6 +39,7 @@ import com.cgfay.picker.selector.OnMediaSelector
 import com.cgfay.picker.utils.MediaMetadataUtils
 import com.cgfay.scan.R
 import com.cgfay.uitls.utils.PermissionUtils
+import coil.compose.AsyncImage
 
 class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelectedChangeListener {
 
@@ -57,8 +56,7 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
 
     // album list
     private var albumDataScanner: AlbumDataScanner? = null
-    private lateinit var albumDataAdapter: AlbumDataAdapter
-    private var albumRecyclerView: RecyclerView? = null
+    private val albumListState = mutableStateListOf<AlbumData>()
 
     private var tabLayout: com.google.android.material.tabs.TabLayout? = null
     private var viewPager: ViewPager? = null
@@ -115,11 +113,7 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
                 initMediaListView(it)
             })
             if (showAlbumList.value) {
-                AndroidView(factory = { ctx ->
-                    RecyclerView(ctx).also { albumRecyclerView = it }
-                }, modifier = Modifier.weight(1f), update = {
-                    initAlbumRecyclerView(it)
-                })
+                AlbumList(albumListState)
             }
         }
     }
@@ -161,6 +155,38 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
                     color = Color.Red,
                     modifier = Modifier.clickable { onSelectClick() }
                 )
+            }
+        }
+    }
+
+    @Composable
+    private fun AlbumList(albums: List<AlbumData>) {
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(albums) { album ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            albumTitle.value = album.displayName
+                            showAlbumList.value = false
+                            mediaDataFragments.forEach { it.loadAlbumMedia(album) }
+                        }
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(20.dp))
+                    AsyncImage(
+                        model = album.coverUri,
+                        contentDescription = null,
+                        modifier = Modifier.size(70.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Column {
+                        Text(text = album.displayName, color = Color.Black)
+                        Text(text = album.count.toString(), color = Color.Gray)
+                    }
+                }
             }
         }
     }
@@ -210,27 +236,18 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
             albumDataScanner = AlbumDataScanner(context, LoaderManager.getInstance(this), pickerParam)
             albumDataScanner?.setAlbumDataReceiver(object : AlbumDataScanner.AlbumDataReceiver {
                 override fun onAlbumDataObserve(albumDataList: List<AlbumData>) {
-                    albumDataAdapter.setAlbumDataList(albumDataList)
+                    albumListState.clear()
+                    albumListState.addAll(albumDataList)
                 }
 
                 override fun onAlbumDataReset() {
-                    albumDataAdapter.reset()
+                    albumListState.clear()
                 }
             })
         }
     }
 
-    private fun initAlbumRecyclerView(recyclerView: RecyclerView) {
-        albumDataAdapter = AlbumDataAdapter()
-        recyclerView.layoutManager = LinearLayoutManager(context)
-        recyclerView.addItemDecoration(AlbumItemDecoration())
-        recyclerView.adapter = albumDataAdapter
-        albumDataAdapter.addOnAlbumSelectedListener { album ->
-            albumTitle.value = album.displayName
-            showAlbumList.value = false
-            mediaDataFragments.forEach { it.loadAlbumMedia(album) }
-        }
-    }
+
 
     private fun initMediaListView(vp: ViewPager) {
         mediaDataFragments.clear()
