@@ -51,8 +51,6 @@ import com.cgfay.media.recorder.SpeedMode;
 import com.cgfay.picker.MediaPicker;
 import com.cgfay.picker.loader.AlbumDataLoader;
 import com.cgfay.picker.model.AlbumData;
-import com.cgfay.uitls.bean.MusicData;
-import com.cgfay.uitls.fragment.MusicPickerFragment;
 import com.cgfay.uitls.fragment.PermissionErrorDialogFragment;
 import com.cgfay.uitls.utils.BrightnessUtils;
 import com.cgfay.uitls.utils.PermissionUtils;
@@ -219,23 +217,14 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
                 .addOnCameraSwitchListener(this::switchCamera)
                 .addOnShowPanelListener(type -> {
                     switch (type) {
-                        case CameraPreviewTopbar.PanelMusic: {
-                            openMusicPicker();
-                            break;
-                        }
-
                         case CameraPreviewTopbar.PanelSpeedBar: {
                             setShowingSpeedBar(mSpeedBar.getVisibility() != View.VISIBLE);
                             break;
                         }
-
-                        case CameraPreviewTopbar.PanelFilter: {
-                            showEffectFragment();
-                            break;
-                        }
-
+                        // TODO: Panel actions converted to Compose
+                        case CameraPreviewTopbar.PanelMusic:
+                        case CameraPreviewTopbar.PanelFilter:
                         case CameraPreviewTopbar.PanelSetting: {
-                            showSettingFragment();
                             break;
                         }
                     }
@@ -414,11 +403,7 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
      * @return 是否拦截返回按键事件
      */
     public boolean onBackPressed() {
-        Fragment fragment = getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (fragment != null) {
-            hideFragmentAnimating();
-            return true;
-        }
+
 
         // 倒计时
         if (mCountDownView != null && mCountDownView.isCountDowning()) {
@@ -432,7 +417,7 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     public void onClick(View v) {
         int i = v.getId();
         if (i == R.id.btn_stickers) {
-            showStickers();
+            // TODO: show stickers panel via Compose
         } else if (i == R.id.btn_media) {
             openMediaPicker();
         } else if (i == R.id.btn_record) {
@@ -485,93 +470,6 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
         mPreviewTopbar.setSpeedBarOpen(show);
     }
 
-    /**
-     * 显示设置页面
-     */
-    private void showSettingFragment() {
-        if (mFragmentAnimating) {
-            return;
-        }
-        if (mSettingFragment == null) {
-            mSettingFragment = new PreviewSettingFragment();
-        }
-        mSettingFragment.addStateChangedListener(mStateChangedListener);
-        mSettingFragment.setEnableChangeFlash(mCameraParam.supportFlash);
-        if (!mSettingFragment.isAdded()) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_bottom_container, mSettingFragment, FRAGMENT_TAG)
-                    .addToBackStack(FRAGMENT_TAG)
-                    .commitAllowingStateLoss();
-        } else {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .show(mSettingFragment)
-                    .commitAllowingStateLoss();
-        }
-        showFragmentAnimating();
-    }
-
-    /**
-     * 显示动态贴纸页面
-     */
-    private void showStickers() {
-        if (mFragmentAnimating) {
-            return;
-        }
-        if (mResourcesFragment == null) {
-            mResourcesFragment = new PreviewResourceFragment();
-        }
-        mResourcesFragment.addOnChangeResourceListener((data) -> {
-            mPreviewPresenter.changeResource(data);
-        });
-        if (!mResourcesFragment.isAdded()) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_bottom_container, mResourcesFragment, FRAGMENT_TAG)
-                    .commitAllowingStateLoss();
-        } else {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .show(mResourcesFragment)
-                    .commitAllowingStateLoss();
-        }
-        showFragmentAnimating(false);
-    }
-
-    /**
-     * 显示滤镜页面
-     */
-    private void showEffectFragment() {
-        if (mFragmentAnimating) {
-            return;
-        }
-        if (mEffectFragment == null) {
-            mEffectFragment = new PreviewEffectFragment();
-        }
-        mEffectFragment.addOnCompareEffectListener(compare -> {
-            mPreviewPresenter.showCompare(compare);
-        });
-        mEffectFragment.addOnFilterChangeListener(color -> {
-            mPreviewPresenter.changeDynamicFilter(color);
-        });
-        mEffectFragment.addOnMakeupChangeListener(makeup -> {
-            mPreviewPresenter.changeDynamicMakeup(makeup);
-        });
-        mEffectFragment.scrollToCurrentFilter(mPreviewPresenter.getFilterIndex());
-        if (!mEffectFragment.isAdded()) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_bottom_container, mEffectFragment, FRAGMENT_TAG)
-                    .commitAllowingStateLoss();
-        } else {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .show(mEffectFragment)
-                    .commitAllowingStateLoss();
-        }
-        showFragmentAnimating();
-    }
 
     /**
      * 显示Fragment动画
@@ -617,45 +515,6 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     /**
      * 隐藏Fragment动画
      */
-    private void hideFragmentAnimating() {
-        if (mFragmentAnimating) {
-            return;
-        }
-        mFragmentAnimating = true;
-        Animation animation = AnimationUtils.loadAnimation(mActivity, R.anim.preivew_slide_down);
-        mFragmentContainer.startAnimation(animation);
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                resetAllLayout();
-                removeFragment();
-                mFragmentAnimating = false;
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-    }
-
-    /**
-     * 移除Fragment
-     */
-    private void removeFragment() {
-        Fragment fragment = getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (fragment != null) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .remove(fragment)
-                    .commitAllowingStateLoss();
-        }
-    }
 
     /**
      * 隐藏所有布局
@@ -839,41 +698,11 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     }
 
     /**
-     * 打开音乐选择页面
-     */
-    public void openMusicPicker() {
-        MusicPickerFragment fragment = new MusicPickerFragment();
-        fragment.addOnMusicSelectedListener(
-                new MusicPickerFragment.OnMusicSelectedListener() {
-            @Override
-            public void onMusicSelectClose() {
-                Fragment currentFragment = getChildFragmentManager().findFragmentByTag(MusicPickerFragment.TAG);
-                if (currentFragment != null) {
-                    getChildFragmentManager()
-                            .beginTransaction()
-                            .remove(currentFragment)
-                            .commitNowAllowingStateLoss();
-                }
-            }
-
-            @Override
-            public void onMusicSelected(MusicData musicData) {
-                resetAllLayout();
-                mPreviewPresenter.setMusicPath(musicData.getPath());
-                mPreviewTopbar.setSelectedMusic(musicData.getName());
-            }
-        });
-        getChildFragmentManager()
-                .beginTransaction()
-                .add(fragment, MusicPickerFragment.TAG)
-                .commitAllowingStateLoss();
-    }
-
     /**
      * 打开媒体库选择页面
      */
     private void openMediaPicker() {
-        mMainHandler.post(()-> {
+        mMainHandler.post(() -> {
             MediaPicker.from(this)
                     .showImage(true)
                     .showVideo(true)
