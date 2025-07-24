@@ -180,7 +180,7 @@ class RecordViewModel(private val activity: BaseRecordActivity) : ViewModel(),
     }
 
     override fun onFrameAvailable(surfaceTexture: SurfaceTexture) {
-        _uiState.value = _uiState.value.copy(frameAvailable = true)
+        _uiState.value = _uiState.value.copy(frameAvailable = !_uiState.value.frameAvailable)
     }
 
     fun deleteLastVideo() {
