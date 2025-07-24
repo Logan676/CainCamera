@@ -5,12 +5,12 @@ def platformVersion = 21    // 18: openGLES 3 min api level
 // def platformVersion = 12    //openGLES 2 min api level
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.2'
+    compileSdkVersion rootProject.ext.android_compile_sdk
+    buildToolsVersion rootProject.ext.android_build_tools
 
     defaultConfig {
         minSdkVersion "${platformVersion}"
-        targetSdkVersion 30
+        targetSdkVersion rootProject.ext.android_target_sdk
         versionCode 1
         versionName "1.0"
 
@@ -64,9 +64,9 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':utilslibrary')
     implementation project(':filterlibrary')
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    implementation "androidx.appcompat:appcompat:${rootProject.ext.appcompat_version}"
+    implementation "androidx.constraintlayout:constraintlayout:${rootProject.ext.constraintlayout_version}"
+    testImplementation "junit:junit:${rootProject.ext.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidx_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espresso_version}"
 }

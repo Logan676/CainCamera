@@ -1,12 +1,12 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.2'
+    compileSdkVersion rootProject.ext.android_compile_sdk
+    buildToolsVersion rootProject.ext.android_build_tools
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 30
+        minSdkVersion rootProject.ext.android_min_sdk
+        targetSdkVersion rootProject.ext.android_target_sdk
         versionCode 1
         versionName "1.0"
 
@@ -32,11 +32,11 @@ dependencies {
     implementation project(':filterlibrary')
     implementation project(':medialibrary')
     implementation project(':utilslibrary')
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.recyclerview:recyclerview:1.4.0'
-    implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    implementation "androidx.appcompat:appcompat:${rootProject.ext.appcompat_version}"
+    implementation "androidx.recyclerview:recyclerview:${rootProject.ext.recyclerview_version}"
+    implementation "com.google.android.material:material:${rootProject.ext.material_version}"
+    implementation "androidx.constraintlayout:constraintlayout:${rootProject.ext.constraintlayout_version}"
+    testImplementation "junit:junit:${rootProject.ext.junit_version}"
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidx_junit_version}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espresso_version}"
 }
