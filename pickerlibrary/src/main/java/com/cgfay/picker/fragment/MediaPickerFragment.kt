@@ -16,6 +16,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,21 +30,22 @@ import androidx.fragment.app.FragmentActivity
 import androidx.loader.app.LoaderManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager.widget.ViewPager
+
 import com.cgfay.picker.MediaPicker
 import com.cgfay.picker.MediaPickerParam
 import com.cgfay.picker.adapter.AlbumDataAdapter
 import com.cgfay.picker.adapter.AlbumItemDecoration
-import com.cgfay.picker.adapter.MediaDataPagerAdapter
 import com.cgfay.picker.model.AlbumData
 import com.cgfay.picker.model.MediaData
 import com.cgfay.picker.scanner.AlbumDataScanner
+import com.cgfay.picker.compose.ImageDataScreen
+import com.cgfay.picker.compose.VideoDataScreen
 import com.cgfay.picker.selector.OnMediaSelector
 import com.cgfay.picker.utils.MediaMetadataUtils
 import com.cgfay.scan.R
 import com.cgfay.uitls.utils.PermissionUtils
 
-class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelectedChangeListener {
+class MediaPickerFragment : AppCompatDialogFragment() {
 
     companion object {
         const val TAG = "MediaPickerFragment"
@@ -60,13 +63,8 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
     private lateinit var albumDataAdapter: AlbumDataAdapter
     private var albumRecyclerView: RecyclerView? = null
 
-    private var tabLayout: com.google.android.material.tabs.TabLayout? = null
-    private var viewPager: ViewPager? = null
-
-    private var imageDataFragment: MediaDataFragment? = null
-    private var videoDataFragment: MediaDataFragment? = null
-    private val mediaDataFragments = mutableListOf<MediaDataFragment>()
-    private var mediaDataPagerAdapter: MediaDataPagerAdapter? = null
+    private var selectedTab by mutableStateOf(0)
+    private val currentAlbum = mutableStateOf<AlbumData?>(null)
 
     private val albumTitle = mutableStateOf("所有照片")
     private val selectText = mutableStateOf("")
@@ -98,22 +96,39 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
     @Composable
     private fun MediaPickerScreen() {
         BackHandler { animateCloseFragment() }
+        val tabs = remember {
+            mutableListOf<String>().apply {
+                if (!pickerParam.showImageOnly()) add("视频")
+                if (!pickerParam.showVideoOnly()) add("图片")
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
         ) {
             TopBar()
-            AndroidView(factory = { ctx ->
-                com.google.android.material.tabs.TabLayout(ctx).also { tabLayout = it }
-            }, modifier = Modifier.fillMaxWidth(), update = {
-                initTabView(it)
-            })
-            AndroidView(factory = { ctx ->
-                ViewPager(ctx).also { viewPager = it }
-            }, modifier = Modifier.weight(1f), update = {
-                initMediaListView(it)
-            })
+            if (tabs.size > 1) {
+                TabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(selected = selectedTab == index, onClick = { selectedTab = index }) {
+                            Text(text = title)
+                        }
+                    }
+                }
+            }
+            val loader = LoaderManager.getInstance(this@MediaPickerFragment)
+            Box(modifier = Modifier.weight(1f)) {
+                if (tabs.getOrNull(selectedTab) == "视频") {
+                    VideoDataScreen(loader, currentAlbum.value, pickerParam.spanCount) {
+                        onMediaDataPreview(it)
+                    }
+                } else {
+                    ImageDataScreen(loader, currentAlbum.value, pickerParam.spanCount) {
+                        onMediaDataPreview(it)
+                    }
+                }
+            }
             if (showAlbumList.value) {
                 AndroidView(factory = { ctx ->
                     RecyclerView(ctx).also { albumRecyclerView = it }
@@ -166,8 +181,7 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
     }
 
     private fun onSelectClick() {
-        val index = viewPager?.currentItem ?: 0
-        mediaSelector?.onMediaSelect(activity, mediaDataFragments[index].selectedMediaDataList)
+        mediaSelector?.onMediaSelect(activity ?: return, emptyList())
         if (pickerParam.isAutoDismiss) {
             animateCloseFragment()
         }
@@ -228,57 +242,15 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
         albumDataAdapter.addOnAlbumSelectedListener { album ->
             albumTitle.value = album.displayName
             showAlbumList.value = false
-            mediaDataFragments.forEach { it.loadAlbumMedia(album) }
+            currentAlbum.value = album
         }
     }
 
-    private fun initMediaListView(vp: ViewPager) {
-        mediaDataFragments.clear()
-        if (!pickerParam.showImageOnly()) {
-            if (videoDataFragment == null) videoDataFragment = VideoDataFragment()
-            videoDataFragment?.mediaPickerParam = pickerParam
-            videoDataFragment?.addOnSelectedChangeListener(this)
-            mediaDataFragments.add(videoDataFragment!!)
-        }
-        if (!pickerParam.showVideoOnly()) {
-            if (imageDataFragment == null) imageDataFragment = ImageDataFragment()
-            imageDataFragment?.mediaPickerParam = pickerParam
-            imageDataFragment?.addOnSelectedChangeListener(this)
-            mediaDataFragments.add(imageDataFragment!!)
-        }
-        mediaDataPagerAdapter = MediaDataPagerAdapter(childFragmentManager, mediaDataFragments)
-        vp.adapter = mediaDataPagerAdapter
-    }
-
-    private fun initTabView(tab: com.google.android.material.tabs.TabLayout) {
-        viewPager?.let { tab.setupWithViewPager(it) }
-        tab.visibility = if (mediaDataFragments.size > 1) View.VISIBLE else View.GONE
-        tab.addOnTabSelectedListener(object : com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(t: com.google.android.material.tabs.TabLayout.Tab) {
-                mediaDataFragments[t.position].checkSelectedButton()
-            }
-            override fun onTabUnselected(t: com.google.android.material.tabs.TabLayout.Tab) {}
-            override fun onTabReselected(t: com.google.android.material.tabs.TabLayout.Tab) {}
-        })
-    }
-
-    override fun onMediaDataPreview(mediaData: MediaData) {
+    private fun onMediaDataPreview(mediaData: MediaData) {
         if (mediaData.isVideo) {
-            if (videoDataFragment?.isMultiSelect == true) {
-                parseVideoOrientation(mediaData)
-                onPreviewMedia(mediaData)
-            } else {
-                mediaSelector?.let {
-                    val list = arrayListOf<MediaData>()
-                    parseVideoOrientation(mediaData)
-                    list.add(mediaData)
-                    it.onMediaSelect(activity, list)
-                    if (pickerParam.isAutoDismiss) animateCloseFragment()
-                }
-            }
-        } else {
-            onPreviewMedia(mediaData)
+            parseVideoOrientation(mediaData)
         }
+        onPreviewMedia(mediaData)
     }
 
     private fun parseVideoOrientation(mediaData: MediaData) {
@@ -292,9 +264,6 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
         }
     }
 
-    override fun onSelectedChange(text: String) {
-        selectText.value = text
-    }
 
     private fun onPreviewMedia(mediaData: MediaData) {
         val fragment = MediaPreviewFragment.newInstance(mediaData)
