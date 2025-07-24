@@ -1,14 +1,19 @@
 package com.cgfay.uitls.fragment
 
 import android.app.Activity
-import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
-import com.cgfay.uitls.dialog.DialogBuilder
-import com.cgfay.uitls.dialog.DialogComponent
-import com.cgfay.uitls.dialog.DialogType
 import com.cgfay.utilslibrary.R
 
 /**
@@ -23,24 +28,46 @@ class BackPressedDialogFragment : DialogFragment() {
         hostActivity = if (context is Activity) context else activity
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val parent: Fragment? = parentFragment
-        val resId = arguments?.getInt(MESSAGE, -1) ?: -1
-        return DialogBuilder.from(requireActivity(), DialogType.TWO_BUTTON)
-            .setCancelable(true)
-            .setCanceledOnTouchOutside(true)
-            .setText(DialogComponent.TITLE, if (resId == -1) R.string.back_pressed_message else resId)
-            .setDismissOnClick(DialogComponent.CANCEL_BUTTON, true)
-            .setText(DialogComponent.CANCEL_BUTTON, "取消")
-            .setDismissOnClick(DialogComponent.OK_BUTTON, true)
-            .setText(DialogComponent.OK_BUTTON, "确定")
-            .setOnClickListener(DialogComponent.OK_BUTTON) {
-                parent?.activity?.finish()
+        val messageRes = arguments?.getInt(MESSAGE) ?: R.string.back_pressed_message
+        return ComposeView(requireContext()).apply {
+            setContent {
+                BackPressedDialog(
+                    message = stringResource(id = messageRes),
+                    onConfirm = {
+                        parent?.activity?.finish()
+                        dismiss()
+                    },
+                    onDismiss = { dismiss() }
+                )
             }
-            .create()
+        }
     }
 
     companion object {
         const val MESSAGE = "message"
     }
+}
+
+@Composable
+private fun BackPressedDialog(
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = { Text(text = message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(text = "确定") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = "取消") }
+        }
+    )
 }
