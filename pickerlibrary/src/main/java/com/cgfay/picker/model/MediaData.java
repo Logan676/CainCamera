@@ -17,7 +17,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.cgfay.picker.utils.MediaMetadataUtils;
-import com.cgfay.picker.utils.UriToPathUtils;
 
 /**
  * 媒体数据对象
