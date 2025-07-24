@@ -3,24 +3,17 @@ package com.cgfay.caincamera.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.os.Handler
 import android.os.Looper
 import android.widget.VideoView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,9 +22,7 @@ import androidx.navigation.navArgument
 import com.cgfay.media.CainCommandEditor
 import com.cgfay.media.VideoEditorUtil
 import com.cgfay.uitls.bean.MusicData
-import com.cgfay.uitls.scanner.LocalMusicScanner
 import com.cgfay.uitls.utils.FileUtils
-import com.cgfay.uitls.utils.StringUtils
 import com.cgfay.video.activity.VideoEditActivity
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
@@ -69,71 +60,6 @@ fun MusicMergeNavGraph(videoPath: String, onFinish: () -> Unit) {
     }
 }
 
-@Composable
-fun MusicPickerScreen(
-    onClose: () -> Unit,
-    onMusicSelected: (MusicData) -> Unit
-) {
-    val context = LocalContext.current
-    var musicList by remember { mutableStateOf(listOf<MusicData>()) }
-
-    val scanner = remember {
-        LocalMusicScanner(context as Activity, object : LocalMusicScanner.MusicScanCallbacks {
-            override fun onMusicScanFinish(cursor: Cursor) {
-                val list = mutableListOf<MusicData>()
-                cursor.use { c ->
-                    while (c.moveToNext()) {
-                        list.add(MusicData.valueof(c))
-                    }
-                }
-                musicList = list
-            }
-            override fun onMusicScanReset() { musicList = emptyList() }
-        })
-    }
-
-    DisposableEffect(Unit) {
-        scanner.scanLocalMusic()
-        onDispose { scanner.destroy() }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onClose) {
-                Icon(Icons.Default.Close, contentDescription = null)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Music Selection", modifier = Modifier.weight(1f))
-        }
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(musicList) { data ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onMusicSelected(data) }
-                        .padding(start = 10.dp, end = 10.dp, top = 15.dp)
-                ) {
-                    Text(text = data.name ?: "", color = Color.Black)
-                    Text(
-                        text = StringUtils.generateMillisTime(data.duration.toInt()),
-                        color = Color.Black,
-                        modifier = Modifier.padding(top = 5.dp)
-                    )
-                }
-                Divider(color = Color.Gray, thickness = 1.dp)
-            }
-        }
-    }
-}
 
 @Composable
 fun MusicMergeScreen(
