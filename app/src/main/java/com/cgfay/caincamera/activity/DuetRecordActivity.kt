@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.caincamera.R
-import com.cgfay.caincamera.presenter.RecordPresenter
+import com.cgfay.caincamera.viewmodel.RecordViewModel
 import com.cgfay.caincamera.renderer.DuetRecordRenderer
 import com.cgfay.caincamera.renderer.DuetType
 import com.cgfay.caincamera.widget.GLRecordView
@@ -48,7 +48,7 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     private lateinit var recordButton: RecordButton
 
     private lateinit var renderer: DuetRecordRenderer
-    private lateinit var presenter: RecordPresenter
+    private lateinit var presenter: RecordViewModel
 
     private lateinit var btnSwitch: View
     private lateinit var btnNext: Button
@@ -59,7 +59,7 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presenter = RecordPresenter(this)
+        presenter = RecordViewModel(this)
         presenter.setRecordSeconds(15)
         renderer = DuetRecordRenderer(presenter)
         intent.getParcelableExtra<MediaData>(DUET_MEDIA)?.let { renderer.setDuetVideo(it) }

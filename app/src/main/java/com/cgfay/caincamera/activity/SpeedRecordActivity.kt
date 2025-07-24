@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.caincamera.R
-import com.cgfay.caincamera.presenter.RecordPresenter
+import com.cgfay.caincamera.viewmodel.RecordViewModel
 import com.cgfay.caincamera.renderer.RecordRenderer
 import com.cgfay.caincamera.widget.GLRecordView
 import com.cgfay.camera.widget.RecordButton
@@ -60,7 +60,7 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
     private lateinit var recordButton: RecordButton
 
     private lateinit var renderer: RecordRenderer
-    private lateinit var presenter: RecordPresenter
+    private lateinit var presenter: RecordViewModel
 
     private lateinit var btnSwitch: View
     private lateinit var btnNext: Button
@@ -68,7 +68,7 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        presenter = RecordPresenter(this)
+        presenter = RecordViewModel(this)
         presenter.setRecordSeconds(15)
         renderer = RecordRenderer(presenter)
         setContent {
@@ -231,7 +231,7 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 @Composable
 fun SpeedRecordScreen(
     activity: SpeedRecordActivity,
-    presenter: RecordPresenter,
+    presenter: RecordViewModel,
     renderer: RecordRenderer
 ) {
     val context = LocalContext.current

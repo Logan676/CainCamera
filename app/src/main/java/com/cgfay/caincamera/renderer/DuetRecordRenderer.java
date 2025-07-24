@@ -12,7 +12,7 @@ import android.view.Surface;
 
 import androidx.annotation.NonNull;
 
-import com.cgfay.caincamera.presenter.RecordPresenter;
+import com.cgfay.caincamera.viewmodel.RecordViewModel;
 import com.cgfay.filter.glfilter.adjust.GLImageMirrorFilter;
 import com.cgfay.filter.glfilter.base.GLImageFilter;
 import com.cgfay.filter.glfilter.base.GLImageOESInputFilter;
@@ -59,7 +59,7 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
     private float[] mMatrix = new float[16];
     // presenter
-    private final WeakReference<RecordPresenter> mWeakPresenter;
+    private final WeakReference<RecordViewModel> mWeakPresenter;
 
     // 同框类型
     private DuetType mDuetType;
@@ -88,7 +88,7 @@ public class DuetRecordRenderer implements GLSurfaceView.Renderer {
     // 视频播放器
     private MediaPlayer mMediaPlayer;
 
-    public DuetRecordRenderer(RecordPresenter presenter) {
+    public DuetRecordRenderer(RecordViewModel presenter) {
         mWeakPresenter = new WeakReference<>(presenter);
         mDuetType = DuetType.DUET_TYPE_NONE;
         mVideoInputTexture = OpenGLUtils.GL_NOT_TEXTURE;

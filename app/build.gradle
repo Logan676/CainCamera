@@ -72,6 +72,7 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:${rootProject.ext.constraintLayoutVersion}"
     implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
     implementation "androidx.activity:activity-compose:1.9.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:${rootProject.ext.lifecycleVersion}"
     implementation "androidx.compose.ui:ui:${rootProject.ext.composeVersion}"
     implementation "androidx.compose.material:material:${rootProject.ext.composeVersion}"
     implementation "androidx.compose.ui:ui-tooling-preview:${rootProject.ext.composeVersion}"

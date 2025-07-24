@@ -7,7 +7,7 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import androidx.annotation.NonNull;
 
-import com.cgfay.caincamera.presenter.RecordPresenter;
+import com.cgfay.caincamera.viewmodel.RecordViewModel;
 import com.cgfay.filter.glfilter.base.GLImageFilter;
 import com.cgfay.filter.glfilter.base.GLImageOESInputFilter;
 import com.cgfay.filter.glfilter.color.GLImageDynamicColorFilter;
@@ -52,9 +52,9 @@ public class RecordRenderer implements GLSurfaceView.Renderer {
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
     private float[] mMatrix = new float[16];
     // presenter
-    private final WeakReference<RecordPresenter> mWeakPresenter;
+    private final WeakReference<RecordViewModel> mWeakPresenter;
 
-    public RecordRenderer(RecordPresenter presenter) {
+    public RecordRenderer(RecordViewModel presenter) {
         mWeakPresenter = new WeakReference<>(presenter);
     }
 
