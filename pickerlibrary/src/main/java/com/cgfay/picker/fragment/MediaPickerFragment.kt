@@ -10,6 +10,7 @@ import android.os.Looper
 import android.view.View
 import androidx.activity.compose.BackHandler
 import androidx.annotation.NonNull
+import androidx.appcompat.app.AppCompatDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,6 +30,7 @@ import androidx.loader.app.LoaderManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
+import com.cgfay.picker.compose.MediaPreviewScreen
 import com.cgfay.picker.MediaPicker
 import com.cgfay.picker.MediaPickerParam
 import com.cgfay.picker.adapter.AlbumDataAdapter
@@ -297,10 +299,11 @@ class MediaPickerFragment : AppCompatDialogFragment(), MediaDataFragment.OnSelec
     }
 
     private fun onPreviewMedia(mediaData: MediaData) {
-        val fragment = MediaPreviewFragment.newInstance(mediaData)
-        childFragmentManager.beginTransaction()
-            .add(fragment, FRAGMENT_TAG)
-            .commitNowAllowingStateLoss()
+        val dialog = AppCompatDialog(requireContext(), R.style.PickerPreviewStyle)
+        dialog.setContentView(ComposeView(requireContext()).apply {
+            setContent { MediaPreviewScreen(mediaData) { dialog.dismiss() } }
+        })
+        dialog.show()
     }
 
     private fun animateCloseFragment() {

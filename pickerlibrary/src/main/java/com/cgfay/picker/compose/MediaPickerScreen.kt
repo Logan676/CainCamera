@@ -18,12 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cgfay.picker.model.MediaData
 import com.cgfay.scan.R
 import coil.compose.AsyncImage
 
 @Composable
 fun MediaPickerScreen(
-    onPreview: (Int) -> Unit,
+    onPreview: (MediaData?) -> Unit,
     onShowAlbums: () -> Unit,
     viewModel: PickerViewModel = viewModel()
 ) {
@@ -56,7 +57,7 @@ fun MediaPickerScreen(
             items(mediaList) { media ->
                 Box(modifier = Modifier
                     .padding(2.dp)
-                    .clickable { onPreview(media) }, contentAlignment = Alignment.Center) {
+                    .clickable { onPreview(null) }, contentAlignment = Alignment.Center) {
                     AsyncImage(
                         model = media,
                         contentDescription = null,
