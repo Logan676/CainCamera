@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cgfay.picker.MediaPicker
 import com.cgfay.picker.MediaPickerParam
 
@@ -16,7 +17,9 @@ class PickerComposeActivity : ComponentActivity() {
         }
         setContent {
             MaterialTheme {
-                PickerNavHost()
+                val factory = PickerViewModelFactory(this)
+                val pickerViewModel: PickerViewModel = viewModel(factory = factory)
+                PickerNavHost(pickerViewModel)
             }
         }
     }

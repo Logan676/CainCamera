@@ -16,12 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cgfay.picker.model.AlbumData
 import com.cgfay.scan.R
 
 @Composable
-fun AlbumListScreen(onBack: () -> Unit, viewModel: PickerViewModel = viewModel()) {
+fun AlbumListScreen(onBack: () -> Unit, viewModel: PickerViewModel) {
     val albums by viewModel.albumList.collectAsState()
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(

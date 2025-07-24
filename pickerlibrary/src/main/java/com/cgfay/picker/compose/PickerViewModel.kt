@@ -2,17 +2,28 @@ package com.cgfay.picker.compose
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.cgfay.picker.model.AlbumData
+import com.cgfay.picker.model.MediaData
+import com.cgfay.picker.scanner.ImageDataScanner
+import com.cgfay.picker.scanner.IMediaDataReceiver
+import com.cgfay.picker.scanner.VideoDataScanner
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import com.cgfay.scan.R
-import com.cgfay.picker.model.AlbumData
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class PickerViewModel : ViewModel() {
-    private val _mediaList = MutableStateFlow<List<Int>>(emptyList())
-    val mediaList: StateFlow<List<Int>> = _mediaList
+class PickerViewModel(
+    imageScannerFactory: (IMediaDataReceiver) -> ImageDataScanner,
+    videoScannerFactory: (IMediaDataReceiver) -> VideoDataScanner
+) : ViewModel(), IMediaDataReceiver {
+    private val imageScanner: ImageDataScanner = imageScannerFactory(this)
+    private val videoScanner: VideoDataScanner = videoScannerFactory(this)
+    private val _mediaList = MutableStateFlow<List<MediaData>>(emptyList())
+    val mediaList: StateFlow<List<MediaData>> = _mediaList.asStateFlow()
 
-    private val _selectedMedia = MutableStateFlow<List<Int>>(emptyList())
-    val selectedMedia: StateFlow<List<Int>> = _selectedMedia
+    private val _selectedMedia = MutableStateFlow<List<MediaData>>(emptyList())
+    val selectedMedia: StateFlow<List<MediaData>> = _selectedMedia.asStateFlow()
 
     private val _albumList = MutableStateFlow<List<AlbumData>>(emptyList())
     val albumList: StateFlow<List<AlbumData>> = _albumList
@@ -21,16 +32,19 @@ class PickerViewModel : ViewModel() {
     val selectedAlbum: StateFlow<AlbumData?> = _selectedAlbum
 
     init {
-        // Compose demo placeholder data using library icons
-        _mediaList.value = List(30) { R.drawable.ic_media_picker_preview }
+        // Compose demo placeholder data using library icons if scanners are not available
         _albumList.value = listOf(
-            AlbumData("1", Uri.EMPTY, "All", 30),
-            AlbumData("2", Uri.EMPTY, "Favorites", 15)
+            AlbumData("1", Uri.EMPTY, "All", 0)
         )
         _selectedAlbum.value = _albumList.value.firstOrNull()
+
+        viewModelScope.launch {
+            imageScanner.resume()
+            videoScanner.resume()
+        }
     }
 
-    fun toggle(media: Int) {
+    fun toggle(media: MediaData) {
         val list = _selectedMedia.value.toMutableList()
         if (list.contains(media)) list.remove(media) else list.add(media)
         _selectedMedia.value = list
@@ -47,5 +61,9 @@ class PickerViewModel : ViewModel() {
 
     fun finish() {
         // TODO finish host activity via callback
+    }
+
+    override fun onMediaDataObserve(mediaDataList: List<MediaData>) {
+        _mediaList.value = mediaDataList
     }
 }

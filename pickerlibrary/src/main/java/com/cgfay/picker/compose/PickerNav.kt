@@ -4,29 +4,31 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cgfay.picker.model.MediaData
 
 /** Import screens */
 import com.cgfay.picker.compose.AlbumListScreen
 
 @Composable
-fun PickerNavHost() {
+fun PickerNavHost(viewModel: PickerViewModel) {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "picker") {
         composable("picker") {
             MediaPickerScreen(
-                onPreview = { id ->
-                    navController.currentBackStackEntry?.arguments?.putInt("media", id)
+                onPreview = { media ->
+                    navController.currentBackStackEntry?.arguments?.putParcelable("media", media)
                     navController.navigate("preview")
                 },
-                onShowAlbums = { navController.navigate("albums") }
+                onShowAlbums = { navController.navigate("albums") },
+                viewModel = viewModel
             )
         }
         composable("preview") { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("media")
-            MediaPreviewScreen(id) { navController.popBackStack() }
+            val media = backStackEntry.arguments?.getParcelable<MediaData>("media")
+            MediaPreviewScreen(media) { navController.popBackStack() }
         }
         composable("albums") {
-            AlbumListScreen { navController.popBackStack() }
+            AlbumListScreen(onBack = { navController.popBackStack() }, viewModel = viewModel)
         }
     }
 }

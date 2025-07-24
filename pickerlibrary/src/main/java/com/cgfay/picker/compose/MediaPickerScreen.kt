@@ -17,15 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.cgfay.scan.R
 import coil.compose.AsyncImage
+import com.cgfay.picker.model.MediaData
+import com.cgfay.scan.R
 
 @Composable
 fun MediaPickerScreen(
-    onPreview: (Int) -> Unit,
+    onPreview: (MediaData) -> Unit,
     onShowAlbums: () -> Unit,
-    viewModel: PickerViewModel = viewModel()
+    viewModel: PickerViewModel
 ) {
     val mediaList by viewModel.mediaList.collectAsState()
     val selected by viewModel.selectedMedia.collectAsState()
@@ -54,11 +54,14 @@ fun MediaPickerScreen(
         )
         LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.weight(1f)) {
             items(mediaList) { media ->
-                Box(modifier = Modifier
-                    .padding(2.dp)
-                    .clickable { onPreview(media) }, contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .clickable { onPreview(media) },
+                    contentAlignment = Alignment.Center
+                ) {
                     AsyncImage(
-                        model = media,
+                        model = media.contentUri,
                         contentDescription = null,
                         modifier = Modifier.size(100.dp)
                     )
