@@ -7,7 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.cgfay.caincamera.presenter.FFMediaRecordPresenter;
+import com.cgfay.caincamera.viewmodel.FFMediaRecordViewModel;
 import com.cgfay.filter.glfilter.base.GLImageFilter;
 import com.cgfay.filter.glfilter.base.GLImageOESInputFilter;
 import com.cgfay.filter.glfilter.utils.OpenGLUtils;
@@ -49,10 +49,10 @@ public class FFRecordRenderer implements GLSurfaceView.Renderer {
     private volatile boolean mNeedToAttach;
     private WeakReference<SurfaceTexture> mWeakSurfaceTexture;
 
-    private final WeakReference<FFMediaRecordPresenter> mWeakPresenter;
+    private final WeakReference<FFMediaRecordViewModel> mWeakViewModel;
 
-    public FFRecordRenderer(FFMediaRecordPresenter presenter) {
-        mWeakPresenter = new WeakReference<>(presenter);
+    public FFRecordRenderer(FFMediaRecordViewModel viewModel) {
+        mWeakViewModel = new WeakReference<>(viewModel);
     }
 
     @Override
@@ -170,8 +170,8 @@ public class FFRecordRenderer implements GLSurfaceView.Renderer {
      * 初始化滤镜
      */
     private void initFilters() {
-        mInputFilter = new GLImageOESInputFilter(mWeakPresenter.get().getActivity());
-        mImageFilter = new GLImageFilter(mWeakPresenter.get().getActivity());
+        mInputFilter = new GLImageOESInputFilter(mWeakViewModel.get().getActivity());
+        mImageFilter = new GLImageFilter(mWeakViewModel.get().getActivity());
     }
 
     /**
