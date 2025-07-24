@@ -1,9 +1,6 @@
 package com.cgfay.video.compose
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +17,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cgfay.video.bean.EffectMimeType
+import com.cgfay.video.compose.EffectCategoryBar
+import com.cgfay.video.compose.VideoEffectList
 import com.cgfay.video.widget.VideoTextureView
 
 @Composable
@@ -44,21 +43,16 @@ fun VideoEditScreen(
 ) {
     viewModel.setVideoPath(path)
     val selected by viewModel.selectedEffect.collectAsState()
+    val category by viewModel.category.collectAsState()
+    val effects by viewModel.effectList.collectAsState()
+    val selectedIndex by viewModel.selectedIndex.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
             AndroidView(factory = { context -> VideoTextureView(context) }, modifier = Modifier.fillMaxSize())
         }
-        LazyRow(modifier = Modifier.fillMaxWidth().height(60.dp)) {
-            items(EffectMimeType.values()) { type ->
-                Text(
-                    text = type.displayName,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clickable { viewModel.selectEffect(type.displayName) }
-                )
-            }
-        }
+        EffectCategoryBar(selected = category, onSelected = { viewModel.selectCategory(it) }, modifier = Modifier.fillMaxWidth())
+        VideoEffectList(effects = effects, selectedIndex = selectedIndex, onSelected = { index, effect -> viewModel.selectEffect(index) }, modifier = Modifier.height(80.dp).fillMaxWidth())
         Text(text = selected ?: "No effect", modifier = Modifier.padding(16.dp))
         Row(
             modifier = Modifier
