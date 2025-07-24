@@ -5,8 +5,6 @@ import android.content.Context
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
-import androidx.annotation.IdRes
-import androidx.annotation.LayoutRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -27,35 +25,40 @@ import com.cgfay.utilslibrary.R
  */
 class DialogBuilder private constructor(
     private val context: Context,
-    @LayoutRes private val layout: Int
+    private val type: DialogType
 ) {
 
-    private val resBinder = HashMap<Int, ResBinder>()
+    private val resBinder = HashMap<DialogComponent, ResBinder>()
     private var cancelable = true
     private var cancelOnTouchOutside = true
 
-    fun setBackgroundColor(@IdRes id: Int, @ColorInt backgroundColor: Int): DialogBuilder {
-        resBinder.getOrPut(id) { ResBinder(id) }.backgroundColor = backgroundColor
+    fun setBackgroundColor(component: DialogComponent, @ColorInt backgroundColor: Int): DialogBuilder {
+        resBinder.getOrPut(component) { ResBinder(component) }.backgroundColor = backgroundColor
         return this
     }
 
-    fun setDrawable(@IdRes id: Int, @DrawableRes drawable: Int): DialogBuilder {
-        resBinder.getOrPut(id) { ResBinder(id) }.drawable = drawable
+    fun setDrawable(component: DialogComponent, @DrawableRes drawable: Int): DialogBuilder {
+        resBinder.getOrPut(component) { ResBinder(component) }.drawable = drawable
         return this
     }
 
-    fun setText(@IdRes id: Int, text: String?): DialogBuilder {
-        resBinder.getOrPut(id) { ResBinder(id) }.text = text
+    fun setText(component: DialogComponent, text: String?): DialogBuilder {
+        resBinder.getOrPut(component) { ResBinder(component) }.text = text
         return this
     }
 
-    fun setDismissOnClick(@IdRes id: Int, dismissOnClick: Boolean): DialogBuilder {
-        resBinder.getOrPut(id) { ResBinder(id) }.dismissOnClick = dismissOnClick
+    fun setText(component: DialogComponent, @androidx.annotation.StringRes textRes: Int): DialogBuilder {
+        resBinder.getOrPut(component) { ResBinder(component) }.text = textRes
         return this
     }
 
-    fun setOnClickListener(@IdRes id: Int, listener: View.OnClickListener): DialogBuilder {
-        resBinder.getOrPut(id) { ResBinder(id) }.clickListener = listener
+    fun setDismissOnClick(component: DialogComponent, dismissOnClick: Boolean): DialogBuilder {
+        resBinder.getOrPut(component) { ResBinder(component) }.dismissOnClick = dismissOnClick
+        return this
+    }
+
+    fun setOnClickListener(component: DialogComponent, listener: View.OnClickListener): DialogBuilder {
+        resBinder.getOrPut(component) { ResBinder(component) }.clickListener = listener
         return this
     }
 
@@ -73,10 +76,9 @@ class DialogBuilder private constructor(
         val dialog = Dialog(context, R.style.CommonDialogStyle)
         val view = ComposeView(context)
         view.setContent {
-            when (layout) {
-                R.layout.dialog_one_button -> OneButtonDialog(dialog, resBinder)
-                R.layout.dialog_two_button -> TwoButtonDialog(dialog, resBinder)
-                else -> {}
+            when (type) {
+                DialogType.ONE_BUTTON -> OneButtonDialog(dialog, resBinder, context)
+                DialogType.TWO_BUTTON -> TwoButtonDialog(dialog, resBinder, context)
             }
         }
         dialog.setContentView(view)
@@ -92,25 +94,35 @@ class DialogBuilder private constructor(
     }
 
     private data class ResBinder(
-        @IdRes val id: Int,
+        val component: DialogComponent,
         @ColorInt var backgroundColor: Int = 0,
         @DrawableRes var drawable: Int = 0,
-        var text: String? = null,
+        var text: Any? = null,
         var dismissOnClick: Boolean = false,
         var clickListener: View.OnClickListener? = null
-    )
+    ) {
+        fun getText(context: Context): String? = when (val t = text) {
+            is Int -> context.getString(t)
+            is String -> t
+            else -> null
+        }
+    }
 
     companion object {
-        fun from(context: Context, @LayoutRes layout: Int): DialogBuilder = DialogBuilder(context, layout)
+        fun from(context: Context, type: DialogType): DialogBuilder = DialogBuilder(context, type)
     }
 }
 
 @Composable
-private fun OneButtonDialog(dialog: Dialog, binders: Map<Int, DialogBuilder.ResBinder>) {
-    val title = binders[R.id.tv_dialog_title]?.text ?: ""
-    val message = binders[R.id.tv_dialog_message]?.text
-    val okBinder = binders[R.id.btn_dialog_ok]
-    val closeBinder = binders[R.id.iv_dialog_close]
+private fun OneButtonDialog(
+    dialog: Dialog,
+    binders: Map<DialogComponent, DialogBuilder.ResBinder>,
+    context: Context
+) {
+    val title = binders[DialogComponent.TITLE]?.getText(context) ?: ""
+    val message = binders[DialogComponent.MESSAGE]?.getText(context)
+    val okBinder = binders[DialogComponent.OK_BUTTON]
+    val closeBinder = binders[DialogComponent.CLOSE_BUTTON]
 
     Box(
         modifier = Modifier
@@ -133,7 +145,7 @@ private fun OneButtonDialog(dialog: Dialog, binders: Map<Int, DialogBuilder.ResB
                 if (okBinder?.dismissOnClick == true) dialog.dismiss()
                 okBinder?.clickListener?.onClick(null)
             }, modifier = Modifier.fillMaxWidth()) {
-                Text(text = okBinder?.text ?: context.getString(R.string.btn_dialog_ok))
+                Text(text = okBinder?.getText(context) ?: context.getString(R.string.btn_dialog_ok))
             }
         }
         if (closeBinder != null) {
@@ -151,12 +163,16 @@ private fun OneButtonDialog(dialog: Dialog, binders: Map<Int, DialogBuilder.ResB
 }
 
 @Composable
-private fun TwoButtonDialog(dialog: Dialog, binders: Map<Int, DialogBuilder.ResBinder>) {
-    val title = binders[R.id.tv_dialog_title]?.text ?: ""
-    val message = binders[R.id.tv_dialog_message]?.text
-    val okBinder = binders[R.id.btn_dialog_ok]
-    val cancelBinder = binders[R.id.btn_dialog_cancel]
-    val closeBinder = binders[R.id.iv_dialog_close]
+private fun TwoButtonDialog(
+    dialog: Dialog,
+    binders: Map<DialogComponent, DialogBuilder.ResBinder>,
+    context: Context
+) {
+    val title = binders[DialogComponent.TITLE]?.getText(context) ?: ""
+    val message = binders[DialogComponent.MESSAGE]?.getText(context)
+    val okBinder = binders[DialogComponent.OK_BUTTON]
+    val cancelBinder = binders[DialogComponent.CANCEL_BUTTON]
+    val closeBinder = binders[DialogComponent.CLOSE_BUTTON]
 
     Box(
         modifier = Modifier
@@ -185,14 +201,14 @@ private fun TwoButtonDialog(dialog: Dialog, binders: Map<Int, DialogBuilder.ResB
                         cancelBinder?.clickListener?.onClick(null)
                     },
                     modifier = Modifier.weight(1f)
-                ) { Text(text = cancelBinder?.text ?: context.getString(R.string.btn_dialog_cancel)) }
+                ) { Text(text = cancelBinder?.getText(context) ?: context.getString(R.string.btn_dialog_cancel)) }
                 Button(
                     onClick = {
                         if (okBinder?.dismissOnClick == true) dialog.dismiss()
                         okBinder?.clickListener?.onClick(null)
                     },
                     modifier = Modifier.weight(1f)
-                ) { Text(text = okBinder?.text ?: context.getString(R.string.btn_dialog_ok)) }
+                ) { Text(text = okBinder?.getText(context) ?: context.getString(R.string.btn_dialog_ok)) }
             }
         }
         if (closeBinder != null) {
