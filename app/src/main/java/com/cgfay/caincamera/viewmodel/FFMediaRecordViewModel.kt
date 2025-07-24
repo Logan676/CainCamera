@@ -9,7 +9,6 @@ import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
-import com.cgfay.caincamera.ui.FFMediaRecordView
 import com.cgfay.camera.camera.CameraApi
 import com.cgfay.camera.camera.CameraController
 import com.cgfay.camera.camera.CameraXController
@@ -30,8 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.ArrayList
 
 class FFMediaRecordViewModel(
-    private val activity: FragmentActivity,
-    private val view: FFMediaRecordView
+    private val activity: FragmentActivity
 ) : ViewModel(), PreviewCallback, FFAudioRecorder.OnRecordCallback,
     OnSurfaceTextureListener, OnFrameAvailableListener, FFMediaRecorder.OnRecordListener {
 
@@ -115,13 +113,13 @@ class FFMediaRecordViewModel(
     fun isRecording(): Boolean = isRecording
 
     override fun onRecordStart() {
-        view.hidViews()
+        _uiState.value = _uiState.value.copy(showViews = false)
         isRecording = true
     }
 
     override fun onRecording(duration: Float) {
         val progress = duration / maxDuration
-        view.setProgress(progress)
+        _uiState.value = _uiState.value.copy(progress = progress)
         if (duration > remainDuration) stopRecord()
     }
 
@@ -132,25 +130,26 @@ class FFMediaRecordViewModel(
                 videoList.add(VideoInfo(it.output, duration))
                 remainDuration -= duration.toInt()
                 val currentProgress = duration / maxDuration
-                view.addProgressSegment(currentProgress)
+                val segs = _uiState.value.progressSegments.toMutableList()
+                segs.add(currentProgress)
+                _uiState.value = _uiState.value.copy(progressSegments = segs)
             }
         }
-        view.showViews()
-        view.showToast("录制成功")
+        _uiState.value = _uiState.value.copy(showViews = true, toast = "录制成功")
     }
 
     override fun onRecordError(msg: String) {
-        view.showToast(msg)
+        _uiState.value = _uiState.value.copy(toast = msg)
         mediaRecorder?.release()
         mediaRecorder = null
     }
 
     override fun onSurfaceTexturePrepared(surfaceTexture: SurfaceTexture) {
-        view.bindSurfaceTexture(surfaceTexture)
+        _uiState.value = _uiState.value.copy(surfaceTexture = surfaceTexture)
     }
 
     override fun onFrameAvailable(surfaceTexture: SurfaceTexture) {
-        view.onFrameAvailable()
+        _uiState.value = _uiState.value.copy(frameAvailable = !_uiState.value.frameAvailable)
     }
 
     override fun onPreviewFrame(data: ByteArray) {
@@ -172,7 +171,9 @@ class FFMediaRecordViewModel(
                 videoList.removeAt(index)
             }
         }
-        view.deleteProgressSegment()
+        val segs = _uiState.value.progressSegments.toMutableList()
+        if (segs.isNotEmpty()) segs.removeAt(segs.size - 1)
+        _uiState.value = _uiState.value.copy(progressSegments = segs, showViews = true)
     }
 
     private fun openCamera() {
@@ -193,7 +194,7 @@ class FFMediaRecordViewModel(
             width = recordWidth
             height = recordHeight
         }
-        view.updateTextureSize(width, height)
+        _uiState.value = _uiState.value.copy(textureSize = width to height)
     }
 
     private fun closeCamera() { cameraController.closeCamera() }
@@ -208,17 +209,17 @@ class FFMediaRecordViewModel(
             intent.putExtra(VideoEditActivity.VIDEO_PATH, outputPath)
             activity.startActivity(intent)
         } else {
-            view.showProgressDialog()
+            _uiState.value = _uiState.value.copy(showDialog = true)
             val videos = videoList.mapNotNull { it.fileName }
             val finalPath = generateOutputPath()
             commandEditor.execCommand(CainCommandEditor.concatVideo(activity, videos, finalPath)) { result ->
-                view.hideProgressDialog()
+                _uiState.value = _uiState.value.copy(showDialog = false)
                 if (result == 0) {
                     val intent = Intent(activity, VideoEditActivity::class.java)
                     intent.putExtra(VideoEditActivity.VIDEO_PATH, finalPath)
                     activity.startActivity(intent)
                 } else {
-                    view.showToast("合成失败")
+                    _uiState.value = _uiState.value.copy(toast = "合成失败")
                 }
             }
         }
