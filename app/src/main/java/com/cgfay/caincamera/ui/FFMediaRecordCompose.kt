@@ -19,6 +19,7 @@ import com.cgfay.caincamera.widget.GLRecordView
 import com.cgfay.camera.widget.RecordButton
 import com.cgfay.camera.widget.RecordProgressView
 import android.opengl.GLSurfaceView
+import com.cgfay.uitls.ui.CombineVideoDialog
 
 @Composable
 fun FFMediaRecordScreen(onFinish: () -> Unit) {
@@ -146,18 +147,7 @@ fun FFMediaRecordScreen(onFinish: () -> Unit) {
             ) { Text("Next") }
         }
         if (showDialog.value) {
-            AlertDialog(
-                onDismissRequest = {},
-                title = { Text("Processing") },
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Please wait")
-                    }
-                },
-                confirmButton = {}
-            )
+            CombineVideoDialog(message = "Please wait", dimable = false) {}
         }
         IconButton(onClick = onFinish, modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) {
             Icon(Icons.Filled.ArrowBack, contentDescription = null)
