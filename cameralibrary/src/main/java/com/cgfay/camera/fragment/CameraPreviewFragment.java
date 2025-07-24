@@ -33,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.compose.ui.platform.ComposeView;
 
 import com.cgfay.camera.loader.impl.CameraMediaLoader;
 import com.cgfay.camera.presenter.CameraPreviewPresenter;
@@ -48,6 +49,8 @@ import com.cgfay.camera.model.GalleryType;
 import com.cgfay.camera.widget.CameraMeasureFrameLayout;
 import com.cgfay.camera.widget.RecordSpeedLevelBar;
 import com.cgfay.media.recorder.SpeedMode;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import com.cgfay.picker.MediaPicker;
 import com.cgfay.picker.loader.AlbumDataLoader;
 import com.cgfay.picker.model.AlbumData;
@@ -58,6 +61,7 @@ import com.cgfay.uitls.utils.BrightnessUtils;
 import com.cgfay.uitls.utils.PermissionUtils;
 import com.cgfay.uitls.widget.RoundOutlineProvider;
 import com.cgfay.widget.CameraTabView;
+import com.cgfay.camera.compose.PreviewResourceScreen;
 
 
 /**
@@ -117,7 +121,7 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
     private boolean mFragmentAnimating;
     private FrameLayout mFragmentContainer;
     // 贴纸资源页面
-    private PreviewResourceFragment mResourcesFragment;
+    private ComposeView mResourcesView;
     // 滤镜页面
     private PreviewEffectFragment mEffectFragment;
     // 更多设置界面
@@ -415,7 +419,7 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
      */
     public boolean onBackPressed() {
         Fragment fragment = getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (fragment != null) {
+        if (fragment != null || (mResourcesView != null && mResourcesView.getParent() != null)) {
             hideFragmentAnimating();
             return true;
         }
@@ -519,22 +523,22 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
         if (mFragmentAnimating) {
             return;
         }
-        if (mResourcesFragment == null) {
-            mResourcesFragment = new PreviewResourceFragment();
+        if (mResourcesView == null) {
+            mResourcesView = new ComposeView(mActivity);
+            mResourcesView.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+            mResourcesView.setContent(() -> {
+                PreviewResourceScreen(data -> {
+                    mPreviewPresenter.changeResource(data);
+                    return Unit.INSTANCE;
+                });
+                return Unit.INSTANCE;
+            });
         }
-        mResourcesFragment.addOnChangeResourceListener((data) -> {
-            mPreviewPresenter.changeResource(data);
-        });
-        if (!mResourcesFragment.isAdded()) {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_bottom_container, mResourcesFragment, FRAGMENT_TAG)
-                    .commitAllowingStateLoss();
-        } else {
-            getChildFragmentManager()
-                    .beginTransaction()
-                    .show(mResourcesFragment)
-                    .commitAllowingStateLoss();
+        if (mResourcesView.getParent() == null) {
+            mFragmentContainer.addView(mResourcesView);
         }
         showFragmentAnimating(false);
     }
@@ -654,6 +658,8 @@ public class CameraPreviewFragment extends Fragment implements View.OnClickListe
                     .beginTransaction()
                     .remove(fragment)
                     .commitAllowingStateLoss();
+        } else if (mResourcesView != null && mResourcesView.getParent() != null) {
+            mFragmentContainer.removeView(mResourcesView);
         }
     }
 
