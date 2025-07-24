@@ -13,7 +13,7 @@ ext {
     junitVersion = '4.13.2'
     androidXJunitVersion = '1.2.1'
     espressoVersion = '3.6.1'
-    lifecycleVersion = '2.9.2'
+    lifecycleVersion = '2.2.0'
     cameraXVersion = '1.4.2'
     rxJavaVersion = '2.2.21'
     rxAndroidVersion = '2.1.1'
