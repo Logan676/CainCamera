@@ -25,7 +25,11 @@ fun PickerNavHost(viewModel: PickerViewModel) {
         }
         composable("preview") { backStackEntry ->
             val media = backStackEntry.arguments?.getParcelable<MediaData>("media")
-            MediaPreviewScreen(media) { navController.popBackStack() }
+            if (media != null) {
+                MediaPreviewScreen(media) { navController.popBackStack() }
+            } else {
+                navController.popBackStack()
+            }
         }
         composable("albums") {
             AlbumListScreen(onBack = { navController.popBackStack() }, viewModel = viewModel)
