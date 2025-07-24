@@ -1,84 +1,71 @@
-# CainCamera 介绍
-CainCamera是一个集美颜相机、图片编辑、短视频编辑等功能的综合性开源APP，目前主要介绍美颜相机、短视频编辑功能的实现，图片编辑功能暂时还没时间处理。
-本人编写该项目主要用于学习如何实现相机的实时美颜、动态滤镜、动态贴纸、彩妆、拍照、短视频分段录制与回删、图片编辑、短时频编辑与合成等功能。
-截止目前为止，已完成的功能包括：
+# CainCamera Overview
+CainCamera is a comprehensive open source Android app that integrates a beauty camera, image editing and short video editing. This project mainly demonstrates the implementation of the beauty camera and short video editor. The image editing module is not yet finished.
 
-## 1、美颜相机部分
-* 实时美颜、美白
-* 动态滤镜
-* 动态贴纸
-* 拍照、短视频分段录制、回删等
-* 瘦脸大眼、亮眼、美牙等美型处理
-### 备注：
-由于彩妆功能缺乏各种素材，本人只写了一个大概的流程，彩妆主要是素材绘制有无素材的区别而已，有兴趣的可以参考一下
+I created this project to learn how to implement real-time beautification, dynamic filters, dynamic stickers, makeup, photo capture, segmented video recording with deletion, image editing, short video editing and composition. The features completed so far include:
 
-## 2、短视频编辑部分
-* 仿照抖音编辑功能。目前短视频编辑页面是仿照抖音页面来实现的。
-* 自研基于FFmpeg的视频播放器。目前播放器已经包装成MediaPlayer-like的方式，支持快速seek、倍速播放、实时添加特效预览功能。写这个视频播放器的目的也是用于短视频编辑页面的实时预览处理，目前还有不少的BUG，商用的话建议慎重使用
-* 简单实现剪辑功能。目前是基于remuxing 来实现的，但还没有对倍速做处理，后续再做处理
-* 实时特效。目前已经在播放器上实现了抖音的闪白、幻觉、缩放、抖动、灵魂出窍等滤镜特效以及全部的分屏特效。由于时间特效需要对播放器进行改动，暂时没时间实现。
-### 备注：
-目前非线性编辑SDK目前正抓紧抽时间实现，敬请期待
+## 1. Beauty Camera
+- Real-time beauty and whitening
+- Dynamic filters
+- Dynamic stickers
+- Photo capture and segmented video recording with deletion
+- Face reshaping such as slim face, bright eyes and teeth whitening
+### Note
+Due to missing makeup materials this module only demonstrates the general workflow.
 
-## 更新记录
-2021年4月5日更新：
-CameraX库升级到1.0.0-rc03版本，目前基本的人脸检测、美颜美肤等功能已基本适配，CameraX的部分功能仍未实现。等后续做完非线性编辑SDK之后，有时间再接入[MediaPipe](https://github.com/google/mediapipe)替换现有人脸SDK，敬请期待。
+## 2. Short Video Editing
+- UI inspired by Douyin (TikTok). The editing page mimics the Douyin style.
+- Custom FFmpeg-based video player wrapped in a MediaPlayer-like interface. It supports fast seeking, speed adjustment and real-time effect preview. This player is mainly for short video editing preview and is still buggy.
+- Simple trimming based on remuxing. Playback speed processing is not implemented yet.
+- Real-time effects such as flash, hallucination, zoom, shake, soul out-of-body filters and all split screen effects. Time effects require modifications to the player and are not yet implemented.
+### Note
+A non-linear editing SDK is under development.
 
+## Update Log
+**2021-04-05**: Upgraded CameraX to `1.0.0-rc03`. Basic face detection and beauty features are adapted, but some CameraX functions are still missing. After finishing the non-linear editing SDK I plan to integrate [MediaPipe](https://github.com/google/mediapipe) to replace the current face SDK.
 
-# 关于人脸SDK验证问题
-关于人脸关键点SDK验证问题，由于采用Face++的试用版作为测试的，每天使用的次数有限
-所以这里建议大家到Face++官网(https://www.faceplusplus.com/) 注册一个Key使用，需要先注册Key，然后绑定Bundle(包名)才能使用。
-国内用户需要到https://www.faceplusplus.com.cn/ 注册。 注册流程如下:
-[Face++ SDK注册流程](https://github.com/CainKernel/CainCamera/blob/master/document/introduction/facepp_registration.md)
+# About Face SDK Verification
+The face keypoint SDK uses a trial version of Face++ and has a limited number of daily uses. Please register your own key at [Face++](https://www.faceplusplus.com/) and bind your package name before use. Mainland users should register at [https://www.faceplusplus.com.cn/](https://www.faceplusplus.com.cn/). Registration steps:
+[Face++ SDK Registration](https://github.com/CainKernel/CainCamera/blob/master/document/introduction/facepp_registration.md)
 
-更多关于Face++ SDK相关的问题，可以到Face++官方github询问：
+For more questions about Face++ SDK please ask on the official GitHub:
 [MegviiFacepp-Android-SDK](https://github.com/FacePlusPlus/MegviiFacepp-Android-SDK)
 
-# library介绍:
-* cameralibrary: 相机库，包括渲染渲染线程、渲染引擎等流程
+# Library Introduction
+- **cameralibrary**: Camera library including render thread and engine.
+- **facedetectlibrary**: Face++ keypoint SDK library used with `landmarklibrary`.
+- **filterlibrary**: Contains filters and resource utilities.
+- **imagelibrary**: Image editing library. Currently only provides filter processing and saving.
+- **landmarklibrary**: Normalized key point processing for filters and stickers.
+- **medialibrary**: Short video editing library providing a real-time preview player, audio trimmer and video composer in C++. Audio/video trimming and composition are still under development.
+- **pickerlibrary**: Media selector for choosing images and videos.
+- **utilslibrary**: Shared utilities for bitmap, file and string handling.
+- **videolibrary**: Planned video editing library. Not yet implemented.
 
-* facedetectlibrary: Face++人脸关键点SDK库。结合landmarklibrary库做人脸关键点处理。
+# CainCamera Screenshots
+## Animated Stickers and Filters
+![Sticker and filter](https://github.com/CainKernel/CainCamera/blob/master/screenshot/sticker_and_filter.jpg)
 
-* filterlibrary：滤镜库。该库存放各个滤镜以及资源处理等工具。
+![Dynamic filter](https://github.com/CainKernel/CainCamera/blob/master/screenshot/dynamic_filter.jpg)
 
-* imagelibrary: 图片编辑库。暂时该库仅有的滤镜处理和保存功能，目前由于正在编写短视频编辑功能的，该库目前暂时没完善。
+## Face Beautification and Reshaping
+![Beauty face](https://github.com/CainKernel/CainCamera/blob/master/screenshot/beauty_face.jpg)
 
-* landmarklibrary: 关键点处理库。该库用于归一化的关键点处理，用在filterlibrary中处理滤镜、贴纸等处理。
+![Face reshape](https://github.com/CainKernel/CainCamera/blob/master/screenshot/face_reshape.jpg)
 
-* medialibrary: 短视频编辑库。用于短视频编辑实时预览的播放器、音频裁剪器、视频合成器等全套C++代码。
-音视频裁剪器、视频合成器目前仍在开发阶段，敬请期待。
+## Makeup Function
+*Note: Only demonstrates using masks because materials are missing.*
 
-* pickerlibrary: 媒体选择库。用于选择媒体库中的图像、视频。
+![Makeup](https://github.com/CainKernel/CainCamera/blob/master/screenshot/makeup.jpg)
 
-* utilslibrary: 共用工具库。bitmap处理、文件处理、字符串处理的封装工具。
+## Media Library Scanning
+![Media scan](https://github.com/CainKernel/CainCamera/blob/master/screenshot/media_scan.jpg)
 
-* videolibrary: 视频编辑库。目前该库处于计划实现状态，由于短视频播放器、短视频合成器等工具还没实现，目前该库暂时还没实现，敬请期待。
+## Image Editing Page
+*Note: The image editor does not include all features yet.*
 
-# CainCamera截图
-## 动态贴纸与动态滤镜功能
-![贴纸和滤镜](https://github.com/CainKernel/CainCamera/blob/master/screenshot/sticker_and_filter.jpg)
+![Image edit](https://github.com/CainKernel/CainCamera/blob/master/screenshot/image_edit.jpg)
 
-![动态滤镜](https://github.com/CainKernel/CainCamera/blob/master/screenshot/dynamic_filter.jpg)
-
-## 人脸美化与美型处理
-![人脸美化](https://github.com/CainKernel/CainCamera/blob/master/screenshot/beauty_face.jpg)
-
-![美型处理](https://github.com/CainKernel/CainCamera/blob/master/screenshot/face_reshape.jpg)
-
-## 彩妆功能
-* 备注：由于缺乏素材，这里只展示彩妆功能是如何通过遮罩来实现。
-
-![动态彩妆](https://github.com/CainKernel/CainCamera/blob/master/screenshot/makeup.jpg)
-
-## 媒体库遍历
-![媒体库遍历](https://github.com/CainKernel/CainCamera/blob/master/screenshot/media_scan.jpg)
-
-## 图片编辑页面
-* 备注：图片编辑功能暂时没有时间实现所有的功能
-
-![图片编辑页面](https://github.com/CainKernel/CainCamera/blob/master/screenshot/image_edit.jpg)
-
-# CainCamera 参考项目：
+# CainCamera Reference Projects
 [grafika](https://github.com/google/grafika)
 
 [GPUImage](https://github.com/CyberAgent/android-gpuimage)
@@ -87,34 +74,33 @@ CameraX库升级到1.0.0-rc03版本，目前基本的人脸检测、美颜美肤
 
 [AudioVideoRecordingSample](https://github.com/saki4510t/AudioVideoRecordingSample)
 
-# 《Android 美颜类相机开发汇总》
-[第一章 Android OpenGLES 相机预览](https://www.jianshu.com/p/dabc6be45d2e)
+# "Android Beauty Camera Development Series"
+[Chapter 1 Camera Preview with OpenGL ES](https://www.jianshu.com/p/dabc6be45d2e)
 
-[第二章 Android OpenGLES 录制视频](https://www.jianshu.com/p/d5fe577170cd)
+[Chapter 2 Recording Video with OpenGL ES](https://www.jianshu.com/p/d5fe577170cd)
 
-[第三章 Android OpenGLES 给相机添加滤镜](https://www.jianshu.com/p/f7629254f7f0)
+[Chapter 3 Adding Filters to Camera](https://www.jianshu.com/p/f7629254f7f0)
 
-[第四章 Android OpenGLES 动态贴纸实现](https://www.jianshu.com/p/122bedf3a17e)
+[Chapter 4 Dynamic Stickers](https://www.jianshu.com/p/122bedf3a17e)
 
-[第五章 Android OpenGLES 美颜定制实现](https://www.jianshu.com/p/3334a3af331f)
+[Chapter 5 Customized Beautify Effects](https://www.jianshu.com/p/3334a3af331f)
 
-[第六章 Android OpenGLES 美妆定制实现](https://www.jianshu.com/p/bc0d0db2893b)
+[Chapter 6 Customized Makeup Effects](https://www.jianshu.com/p/bc0d0db2893b)
 
-# 《Android FFmpeg 播放器开发梳理》
-[第零章 基础公共类的封装](https://www.jianshu.com/p/9003caa6683f)
+# "Android FFmpeg Player Development"
+[Chapter 0 Common Base Classes](https://www.jianshu.com/p/9003caa6683f)
 
-[第一章 播放器初始化与解复用流程](https://www.jianshu.com/p/95dc19217847)
+[Chapter 1 Player Initialization and Demuxing](https://www.jianshu.com/p/95dc19217847)
 
-[第二章 音视解码器和视频解码器实现](https://www.jianshu.com/p/8de0fc796ef9)
+[Chapter 2 Audio and Video Decoders](https://www.jianshu.com/p/8de0fc796ef9)
 
-[第三章 音频输出 —— OpenSLES](https://www.jianshu.com/p/9b41212c71a5)
+[Chapter 3 Audio Output - OpenSLES](https://www.jianshu.com/p/9b41212c71a5)
 
-[第四章 音频重采样与变速变调处理](https://www.jianshu.com/p/4af5d16ac017)
+[Chapter 4 Audio Resample and Tempo/Pitch](https://www.jianshu.com/p/4af5d16ac017)
 
-[第五章 视频同步渲染输出](https://www.jianshu.com/p/f8ba3ceac687)
+[Chapter 5 Video Synchronization and Rendering](https://www.jianshu.com/p/f8ba3ceac687)
 
-# 个人联系方式
-
+# Contact
 email: <cain.huang@outlook.com>
 
 blog: [cain_huang](http://www.jianshu.com/u/fd6f2b25d0f4)
@@ -122,13 +108,13 @@ blog: [cain_huang](http://www.jianshu.com/u/fd6f2b25d0f4)
 # License
 ```
 Copyright 2018 cain.huang@outlook.com
- 
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
- 
+
     http://www.apache.org/licenses/LICENSE-2.0
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
