@@ -10,14 +10,15 @@ import android.text.TextUtils
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.viewModels
 import com.cgfay.cameralibrary.R
 import com.cgfay.camera.compose.CameraPreviewScreen
-import com.cgfay.camera.fragment.CameraPreviewFragment
+import com.cgfay.camera.compose.CameraPreviewViewModel
 import com.cgfay.facedetect.engine.FaceTracker
 import com.cgfay.uitls.utils.NotchUtils
 
 class CameraActivity : ComponentActivity() {
+    private val previewViewModel: CameraPreviewViewModel by viewModels()
 
     private val homePressReceiver = object : BroadcastReceiver() {
         private val SYSTEM_DIALOG_REASON_KEY = "reason"
@@ -27,9 +28,7 @@ class CameraActivity : ComponentActivity() {
                 val reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY)
                 if (TextUtils.isEmpty(reason)) return
                 if (reason == SYSTEM_DIALOG_REASON_HOME_KEY) {
-                    val fragment = (context as? FragmentActivity)?.supportFragmentManager
-                        ?.findFragmentByTag(FRAGMENT_CAMERA) as? CameraPreviewFragment
-                    fragment?.cancelRecordIfNeeded()
+                    previewViewModel.cancelRecordIfNeeded()
                 }
             }
         }
@@ -38,7 +37,7 @@ class CameraActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            CameraPreviewScreen(fragmentTag = FRAGMENT_CAMERA)
+            CameraPreviewScreen(viewModel = previewViewModel)
         }
         faceTrackerRequestNetwork()
     }
@@ -70,8 +69,7 @@ class CameraActivity : ComponentActivity() {
     }
 
     override fun onBackPressed() {
-        val fragment = supportFragmentManager.findFragmentByTag(FRAGMENT_CAMERA) as? CameraPreviewFragment
-        if (fragment == null || !fragment.onBackPressed()) {
+        if (!previewViewModel.onBackPressed()) {
             super.onBackPressed()
             overridePendingTransition(0, R.anim.anim_slide_down)
         }
@@ -86,7 +84,4 @@ class CameraActivity : ComponentActivity() {
         unregisterReceiver(homePressReceiver)
     }
 
-    companion object {
-        private const val FRAGMENT_CAMERA = "fragment_camera"
-    }
 }

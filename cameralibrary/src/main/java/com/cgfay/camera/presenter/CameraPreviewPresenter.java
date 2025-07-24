@@ -21,7 +21,7 @@ import com.cgfay.camera.camera.OnSurfaceTextureListener;
 import com.cgfay.camera.camera.PreviewCallback;
 import com.cgfay.camera.listener.OnCaptureListener;
 import com.cgfay.camera.listener.OnFpsListener;
-import com.cgfay.camera.fragment.CameraPreviewFragment;
+import com.cgfay.camera.presenter.CameraPreviewView;
 import com.cgfay.camera.listener.OnPreviewCaptureListener;
 import com.cgfay.camera.render.CameraRenderer;
 import com.cgfay.camera.utils.PathConstraints;
@@ -60,7 +60,7 @@ import java.util.List;
  * @author CainHuang
  * @date 2019/7/3
  */
-public class CameraPreviewPresenter extends PreviewPresenter<CameraPreviewFragment>
+public class CameraPreviewPresenter extends PreviewPresenter<CameraPreviewView>
         implements PreviewCallback, FaceTrackerCallback, OnCaptureListener, OnFpsListener,
         OnSurfaceTextureListener, OnFrameAvailableListener, OnRecordStateListener {
 
@@ -110,7 +110,7 @@ public class CameraPreviewPresenter extends PreviewPresenter<CameraPreviewFragme
     // 渲染器
     private final CameraRenderer mCameraRenderer;
 
-    public CameraPreviewPresenter(CameraPreviewFragment target) {
+    public CameraPreviewPresenter(CameraPreviewView target) {
         super(target);
         mCameraParam = CameraParam.getInstance();
 
