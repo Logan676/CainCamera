@@ -9,14 +9,14 @@ import androidx.fragment.app.FragmentActivity
 import com.cgfay.camera.fragment.CameraPreviewFragment
 
 @Composable
-fun CameraPreviewScreen() {
+fun CameraPreviewScreen(fragmentTag: String = "camera_compose") {
     val context = LocalContext.current
     AndroidView(factory = {
         FrameLayout(it).apply {
             id = View.generateViewId()
             if (context is FragmentActivity) {
                 context.supportFragmentManager.beginTransaction()
-                    .replace(id, CameraPreviewFragment(), "camera_compose")
+                    .replace(id, CameraPreviewFragment(), fragmentTag)
                     .commitNowAllowingStateLoss()
             }
         }
