@@ -5,8 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +48,7 @@ fun VideoEffectList(
     onSelected: (Int, EffectType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyRow(modifier = modifier) {
+    LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = modifier) {
         itemsIndexed(effects) { index, effect ->
             EffectItem(
                 effect = effect,
@@ -86,7 +87,7 @@ fun VideoFilterList(
     onSelected: (Int, ResourceData) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyRow(modifier = modifier) {
+    LazyVerticalGrid(columns = GridCells.Fixed(4), modifier = modifier) {
         itemsIndexed(data) { index, filter ->
             FilterItem(
                 filter = filter,
