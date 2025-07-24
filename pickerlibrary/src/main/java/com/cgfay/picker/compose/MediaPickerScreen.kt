@@ -22,22 +22,33 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cgfay.scan.R
 
 @Composable
-fun MediaPickerScreen(onPreview: (Int) -> Unit, viewModel: PickerViewModel = viewModel()) {
+fun MediaPickerScreen(
+    onPreview: (Int) -> Unit,
+    onShowAlbums: () -> Unit,
+    viewModel: PickerViewModel = viewModel()
+) {
     val mediaList by viewModel.mediaList.collectAsState()
     val selected by viewModel.selectedMedia.collectAsState()
+    val album by viewModel.selectedAlbum.collectAsState()
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Media Picker") },
+            title = { Text(album?.displayName ?: "Media Picker") },
             navigationIcon = {
                 IconButton(onClick = { viewModel.finish() }) {
                     Icon(painterResource(R.drawable.ic_media_picker_close), contentDescription = null)
                 }
             },
             actions = {
+                IconButton(onClick = onShowAlbums) {
+                    Icon(painterResource(id = R.drawable.ic_media_album_indicator), contentDescription = null)
+                }
                 if (selected.isNotEmpty()) {
-                    Text(text = "Select(${selected.size})", modifier = Modifier
-                        .padding(end = 8.dp)
-                        .clickable { viewModel.confirmSelection() })
+                    Text(
+                        text = "Select(${selected.size})",
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable { viewModel.confirmSelection() }
+                    )
                 }
             }
         )
