@@ -3,7 +3,6 @@ package com.cgfay.camera;
 import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Camera;
-import androidx.fragment.app.Fragment;
 
 import com.cgfay.cameralibrary.R;
 import com.cgfay.camera.activity.CameraActivity;
@@ -174,12 +173,7 @@ public final class PreviewBuilder {
             return;
         }
         Intent intent = new Intent(activity, CameraActivity.class);
-        Fragment fragment = mPreviewEngine.getFragment();
-        if (fragment != null) {
-            fragment.startActivity(intent);
-        } else {
-            activity.startActivity(intent);
-            activity.overridePendingTransition(R.anim.anim_slide_up, 0);
-        }
+        activity.startActivity(intent);
+        activity.overridePendingTransition(R.anim.anim_slide_up, 0);
     }
 }
