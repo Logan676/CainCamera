@@ -1,0 +1,80 @@
+plugins {
+    id("com.android.library")
+}
+
+val platformVersion = rootProject.extra["minSdkVersion"].toString()
+
+android {
+    compileSdkVersion(rootProject.extra["compileSdkVersion"] as Int)
+    buildToolsVersion(rootProject.extra["buildToolsVersion"] as String)
+    namespace = "com.cgfay.media"
+
+    defaultConfig {
+        minSdk = platformVersion.toInt()
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags.addAll(listOf("-std=c++11", "-D__STDC_CONSTANT_MACROS"))
+                arguments.addAll(
+                    listOf(
+                        "-DANDROID_PLATFORM_LEVEL=$platformVersion",
+                        "-DANDROID_TOOLCHAIN=clang"
+                    )
+                )
+            }
+            ndk {
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    sourceSets["main"].apply {
+        jniLibs.srcDir("src/main/jniLibs")
+        jni.srcDirs(emptyList<String>())
+        resources.srcDir("src/main/shell")
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
+    }
+
+    packagingOptions {
+        pickFirst("lib/arm64-v8a/libyuv.so")
+        pickFirst("lib/armeabi-v7a/libyuv.so")
+        pickFirst("lib/arm64-v8a/libffmpeg.so")
+        pickFirst("lib/armeabi-v7a/libffmpeg.so")
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    implementation(project(":utilslibrary"))
+    implementation(project(":filterlibrary"))
+    implementation("androidx.appcompat:appcompat:${rootProject.extra["appcompatVersion"]}")
+    implementation("androidx.constraintlayout:constraintlayout:${rootProject.extra["constraintLayoutVersion"]}")
+    testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
+    androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
+    androidTestImplementation("androidx.test.espresso:espresso-core:${rootProject.extra["espressoVersion"]}")
+}
