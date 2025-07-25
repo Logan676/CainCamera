@@ -22,6 +22,9 @@ class CameraPreviewViewModel : ViewModel(), CameraPreviewView {
     var showEffectPanel by mutableStateOf(false)
         private set
 
+    var showSettingPanel by mutableStateOf(false)
+        private set
+
     fun toggleResourcePanel() {
         showResourcePanel = !showResourcePanel
     }
@@ -38,6 +41,14 @@ class CameraPreviewViewModel : ViewModel(), CameraPreviewView {
         showEffectPanel = false
     }
 
+    fun toggleSettingPanel() {
+        showSettingPanel = !showSettingPanel
+    }
+
+    fun hideSettingPanel() {
+        showSettingPanel = false
+    }
+
     fun onBackPressed(): Boolean {
         return when {
             showEffectPanel -> {
@@ -46,6 +57,10 @@ class CameraPreviewViewModel : ViewModel(), CameraPreviewView {
             }
             showResourcePanel -> {
                 hideResourcePanel()
+                true
+            }
+            showSettingPanel -> {
+                hideSettingPanel()
                 true
             }
             else -> false
