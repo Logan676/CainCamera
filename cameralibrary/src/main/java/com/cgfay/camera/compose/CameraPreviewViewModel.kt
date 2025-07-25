@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.cgfay.camera.presenter.CameraPreviewView
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.makeup.bean.DynamicMakeup
+import com.cgfay.filter.glfilter.resource.bean.ResourceData
 
 /**
  * ViewModel used by [CameraActivity] and related composables. It also acts as
@@ -74,5 +75,7 @@ class CameraPreviewViewModel : ViewModel(), CameraPreviewView {
     fun onFilterChange(color: DynamicColor?) {}
 
     fun onMakeupChange(makeup: DynamicMakeup?) {}
+
+    fun onResourceChange(resource: ResourceData) {}
 }
 
