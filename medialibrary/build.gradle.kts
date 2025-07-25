@@ -1,5 +1,6 @@
 plugins {
     id("com.android.library")
+    id("kotlin-android")
 }
 
 val platformVersion = rootProject.extra["minSdkVersion"].toString()
@@ -70,6 +71,7 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":utilslibrary"))
     implementation(project(":filterlibrary"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("androidx.appcompat:appcompat:${rootProject.extra["appcompatVersion"]}")
     implementation("androidx.constraintlayout:constraintlayout:${rootProject.extra["constraintLayoutVersion"]}")
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
