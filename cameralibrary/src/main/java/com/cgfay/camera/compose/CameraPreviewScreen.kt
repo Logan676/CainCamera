@@ -28,10 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cgfay.cameralibrary.R
+import com.cgfay.filter.glfilter.color.bean.DynamicColor
+import com.cgfay.filter.glfilter.makeup.bean.DynamicMakeup
 import com.cgfay.camera.loader.impl.CameraMediaLoader
 import com.cgfay.filter.glfilter.resource.ResourceHelper
 import com.cgfay.filter.glfilter.resource.bean.ResourceData
 import com.cgfay.uitls.utils.BitmapUtils
+import com.cgfay.camera.compose.PreviewEffectScreen
 
 @Composable
 fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
@@ -44,6 +47,13 @@ fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
             Text(text = "Resources")
         }
 
+        Button(
+            onClick = { viewModel.toggleEffectPanel() },
+            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+        ) {
+            Text(text = "Effects")
+        }
+
         AnimatedVisibility(
             visible = viewModel.showResourcePanel,
             enter = slideInVertically { it } + fadeIn(),
@@ -51,6 +61,19 @@ fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             PreviewResourcePanel()
+        }
+
+        AnimatedVisibility(
+            visible = viewModel.showEffectPanel,
+            enter = slideInVertically { it } + fadeIn(),
+            exit = slideOutVertically { it } + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            PreviewEffectScreen(
+                onCompareEffect = { viewModel.onCompareEffect(it) },
+                onFilterChange = { color -> viewModel.onFilterChange(color) },
+                onMakeupChange = { makeup -> viewModel.onMakeupChange(makeup) }
+            )
         }
     }
 }
