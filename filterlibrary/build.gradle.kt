@@ -1,5 +1,6 @@
 plugins {
     id("com.android.library")
+    id("kotlin-android")
 }
 
 android {
@@ -40,6 +41,10 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
         }
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 
     compileOptions {
