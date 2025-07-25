@@ -16,7 +16,16 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -31,6 +40,7 @@ import com.cgfay.caincamera.widget.GLRecordView
 import com.cgfay.camera.widget.RecordButton
 import com.cgfay.camera.widget.RecordProgressView
 import com.cgfay.camera.widget.RecordSpeedLevelBar
+import com.cgfay.camera.widget.RecordSpeed
 import com.cgfay.picker.model.MediaData
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.resource.FilterHelper
@@ -49,8 +59,6 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     companion object { const val DUET_MEDIA = "DUET_MEDIA" }
 
     private lateinit var glRecordView: GLRecordView
-    private lateinit var progressView: RecordProgressView
-    private lateinit var recordSpeedBar: RecordSpeedLevelBar
     private lateinit var recordButton: RecordButton
 
     private lateinit var renderer: DuetRecordRenderer
@@ -86,12 +94,7 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
         glRecordView.setRenderer(renderer)
         glRecordView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY)
 
-        progressView = root.findViewById(R.id.record_progress_view)
-        recordSpeedBar = root.findViewById(R.id.record_speed_bar)
-        recordSpeedBar.visibility = View.GONE
-        recordSpeedBar.setOnSpeedChangedListener { speed ->
-            viewModel.setSpeedMode(SpeedMode.valueOf(speed.speed))
-        }
+
 
         recordButton = root.findViewById(R.id.btn_record)
         recordButton.addRecordStateListener(object : RecordButton.RecordStateListener {
@@ -212,15 +215,15 @@ class DuetRecordActivity : BaseRecordActivity(), View.OnClickListener {
     }
 
     override fun setRecordProgress(progress: Float) {
-        runOnUiThread { progressView.progress = progress }
+        // handled by viewModel
     }
 
     override fun addProgressSegment(progress: Float) {
-        runOnUiThread { progressView.addProgressSegment(progress) }
+        // handled by viewModel
     }
 
     override fun deleteProgressSegment() {
-        runOnUiThread { progressView.deleteProgressSegment() }
+        // handled by viewModel
     }
 
     override fun bindSurfaceTexture(surfaceTexture: SurfaceTexture) {
@@ -308,24 +311,45 @@ fun DuetRecordScreen(
             onViewCreated(this)
         }
     }
-    AndroidView(
-        factory = { root },
-        update = {
-            it.findViewById<RecordProgressView>(R.id.record_progress_view).apply {
-                setProgress(uiState.progress)
-                clear()
-                uiState.progressSegments.forEach { seg -> addProgressSegment(seg) }
-            }
-            it.findViewById<View>(R.id.btn_switch).visibility = if (uiState.showViews) View.VISIBLE else View.GONE
-            it.findViewById<RecordSpeedLevelBar>(R.id.record_speed_bar).visibility = if (uiState.showViews) View.VISIBLE else View.GONE
-            val show = uiState.showViews && viewModel.recordVideoSize > 0
-            it.findViewById<Button>(R.id.btn_delete).visibility = if (show) View.VISIBLE else View.GONE
-            it.findViewById<Button>(R.id.btn_next).visibility = if (show) View.VISIBLE else View.GONE
-            uiState.textureSize?.let { size -> renderer.setTextureSize(size.first, size.second) }
-            uiState.surfaceTexture?.let { texture -> activity.glRecordView.queueEvent { renderer.bindSurfaceTexture(texture) } }
-            if (uiState.frameAvailable) activity.glRecordView.requestRender()
+    var speed by remember { mutableStateOf(RecordSpeed.SPEED_L2) }
+    Box {
+        AndroidView(
+            factory = { root },
+            update = {
+                it.findViewById<View>(R.id.btn_switch).visibility = if (uiState.showViews) View.VISIBLE else View.GONE
+                val show = uiState.showViews && viewModel.recordVideoSize > 0
+                it.findViewById<Button>(R.id.btn_delete).visibility = if (show) View.VISIBLE else View.GONE
+                it.findViewById<Button>(R.id.btn_next).visibility = if (show) View.VISIBLE else View.GONE
+                uiState.textureSize?.let { size -> renderer.setTextureSize(size.first, size.second) }
+                uiState.surfaceTexture?.let { texture -> activity.glRecordView.queueEvent { renderer.bindSurfaceTexture(texture) } }
+                if (uiState.frameAvailable) activity.glRecordView.requestRender()
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        RecordProgressView(
+            progress = uiState.progress,
+            progressSegments = uiState.progressSegments,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .padding(6.dp)
+                .align(Alignment.TopCenter)
+        )
+
+        if (uiState.showViews) {
+            RecordSpeedLevelBar(
+                currentSpeed = speed,
+                onSpeedChanged = {
+                    speed = it
+                    viewModel.setSpeedMode(SpeedMode.valueOf(it.speed))
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 50.dp, end = 50.dp, bottom = 20.dp)
+            )
         }
-    )
+    }
     if (uiState.showDialog) {
         CombineVideoDialog(message = "正在合成", dimable = false) {}
     }
