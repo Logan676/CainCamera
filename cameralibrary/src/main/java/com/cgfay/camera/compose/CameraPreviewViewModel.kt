@@ -5,7 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
-class CameraPreviewViewModel : ViewModel() {
+import com.cgfay.camera.presenter.CameraPreviewView
+
+/**
+ * ViewModel used by [CameraActivity] and related composables. It also acts as
+ * the [CameraPreviewView] implementation so the presenter can dispatch
+ * callbacks without requiring a Fragment instance.
+ */
+class CameraPreviewViewModel : ViewModel(), CameraPreviewView {
 
     var showResourcePanel by mutableStateOf(false)
         private set
