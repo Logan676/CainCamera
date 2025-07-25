@@ -1,15 +1,12 @@
-package com.cgfay.filter.glfilter.stickers.bean;
+package com.cgfay.filter.glfilter.stickers.bean
 
 /**
- * 默认动态贴纸类型
+ * 动态贴纸前景数据
  */
-public class StaticStickerNormalData extends DynamicStickerData {
+class DynamicStickerFrameData : DynamicStickerData() {
+    var alignMode = 0 // 对齐方式，0表示centerCrop, 1表示fitXY，2表示居中center
 
-    // 对齐方式，0表示centerCrop, 1表示fitXY，2表示居中center
-    public int alignMode;
-
-    @Override
-    public String toString() {
+    override fun toString(): String {
         return "DynamicStickerFrameData{" +
                 "alignMode=" + alignMode +
                 ", width=" + width +
@@ -22,6 +19,6 @@ public class StaticStickerNormalData extends DynamicStickerData {
                 ", audioPath='" + audioPath + '\'' +
                 ", audioLooping=" + audioLooping +
                 ", maxCount=" + maxCount +
-                '}';
+                '}'
     }
 }
