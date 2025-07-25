@@ -1,11 +1,9 @@
-package com.badlogic.gdx.math;
+package com.badlogic.gdx.math
 
-public interface Shape2D {
-
+interface Shape2D {
     /** Returns whether the given point is contained within the shape. */
-    boolean contains(Vector2 point);
+    fun contains(point: Vector2): Boolean
 
     /** Returns whether a point with the given coordinates is contained within the shape. */
-    boolean contains(float x, float y);
-
+    fun contains(x: Float, y: Float): Boolean
 }
