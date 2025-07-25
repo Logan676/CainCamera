@@ -1,6 +1,7 @@
 package com.cgfay.camera.model
 
 /**
+ * Created by cain.huang on 2017/9/28.
  * Available gallery types when capturing media.
  */
 enum class GalleryType {
