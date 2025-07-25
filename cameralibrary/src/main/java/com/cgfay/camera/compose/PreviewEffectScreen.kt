@@ -1,12 +1,12 @@
 package com.cgfay.camera.compose
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import com.cgfay.camera.adapter.BeautyList
+import com.cgfay.camera.adapter.FilterGrid
+import com.cgfay.camera.adapter.MakeupList
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Slider
@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.cameralibrary.R
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.makeup.bean.DynamicMakeup
@@ -31,8 +30,6 @@ import com.cgfay.filter.glfilter.resource.FilterHelper
 import com.cgfay.filter.glfilter.resource.MakeupHelper
 import com.cgfay.filter.glfilter.resource.ResourceJsonCodec
 import com.cgfay.filter.glfilter.resource.bean.ResourceData
-import com.cgfay.uitls.utils.BitmapUtils
-import com.cgfay.camera.loader.impl.CameraMediaLoader
 import java.io.File
 
 @Composable
@@ -102,7 +99,7 @@ fun PreviewEffectScreen(
                     onMakeupChange(null)
                 }
             }
-            2 -> FilterList(list = filterList, selected = filterIndex) { index ->
+            2 -> FilterGrid(list = filterList, selected = filterIndex) { index ->
                 filterIndex = index
                 val data = filterList[index]
                 if (data.name != "none") {
@@ -128,87 +125,6 @@ fun PreviewEffectScreen(
             Tab(selected = tabIndex == 2, onClick = { tabIndex = 2 }) {
                 Text(text = stringResource(id = R.string.tab_preview_filter), modifier = Modifier.padding(8.dp))
             }
-        }
-    }
-}
-
-@Composable
-private fun BeautyList(names: Array<String>, selected: Int, onSelect: (Int) -> Unit) {
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
-        itemsIndexed(names) { index, item ->
-            Box(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable { onSelect(index) }
-                    .background(if (index == selected) Color.White.copy(alpha = 0.3f) else Color.Transparent)
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Text(text = item, color = Color.White)
-            }
-        }
-    }
-}
-
-@Composable
-private fun MakeupList(names: Array<String>, selected: Int, onSelect: (Int) -> Unit) {
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
-        itemsIndexed(names) { index, item ->
-            Box(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable { onSelect(index) }
-                    .background(if (index == selected) Color.White.copy(alpha = 0.3f) else Color.Transparent)
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Text(text = item, color = Color.White)
-            }
-        }
-    }
-}
-
-@Composable
-private fun FilterList(list: List<ResourceData>, selected: Int, onSelect: (Int) -> Unit) {
-    val context = LocalContext.current
-    val loader = remember { CameraMediaLoader() }
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
-        itemsIndexed(list) { index, item ->
-            AndroidView(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .size(70.dp)
-                    .clickable { onSelect(index) },
-                factory = { ctx ->
-                    android.widget.FrameLayout(ctx).apply {
-                        setPadding(2, 2, 2, 2)
-                        addView(android.widget.ImageView(ctx).apply {
-                            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                        }, android.widget.FrameLayout.LayoutParams(
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-                        ))
-                    }
-                },
-                update = { layout ->
-                    val imageView = layout.getChildAt(0) as android.widget.ImageView
-                    if (item.thumbPath.startsWith("assets://")) {
-                        imageView.setImageBitmap(
-                            BitmapUtils.getImageFromAssetsFile(
-                                context,
-                                item.thumbPath.removePrefix("assets://")
-                            )
-                        )
-                    } else {
-                        loader.loadThumbnail(
-                            context,
-                            imageView,
-                            Uri.parse(item.thumbPath),
-                            R.drawable.ic_camera_thumbnail_placeholder,
-                            0
-                        )
-                    }
-                    layout.setBackgroundResource(if (index == selected) R.drawable.ic_camera_effect_selected else 0)
-                }
-            )
         }
     }
 }
