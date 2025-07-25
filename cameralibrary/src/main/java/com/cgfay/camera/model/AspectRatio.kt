@@ -1,7 +1,7 @@
 package com.cgfay.camera.model
 
 /**
- * \u957f\u5bbd\u6bd4
+ * Supported aspect ratios for camera preview and recording.
  * Created by cain.huang on 2017/7/27.
  */
 enum class AspectRatio {
