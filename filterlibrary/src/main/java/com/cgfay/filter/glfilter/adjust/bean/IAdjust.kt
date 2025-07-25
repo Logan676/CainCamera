@@ -1,7 +1,7 @@
 package com.cgfay.filter.glfilter.adjust.bean
 
 /**
- * 滤镜调节接口
+ * Interface for applying adjustment parameters.
  */
 interface IAdjust {
     fun onAdjust(adjust: AdjustParam)
