@@ -49,7 +49,7 @@ dependencies {
     implementation "com.google.android.material:material:${rootProject.ext.materialVersion}"
     implementation "androidx.recyclerview:recyclerview:${rootProject.ext.recyclerViewVersion}"
     implementation "androidx.constraintlayout:constraintlayout:${rootProject.ext.constraintLayoutVersion}"
-    implementation "androidx.activity:activity-compose:1.9.0"
+    implementation "androidx.activity:activity-compose:${rootProject.ext.activityComposeVersion}"
     def compose_version = rootProject.ext.composeVersion
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.material:material:$compose_version"
