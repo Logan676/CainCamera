@@ -8,10 +8,11 @@ import android.os.Process
 import android.util.Log
 import android.view.MotionEvent
 import android.view.Surface
+import javax.microedition.khronos.egl.EGLContext
 import androidx.annotation.NonNull
 import androidx.annotation.Nullable
 import com.cgfay.camera.camera.CameraParam
-import com.cgfay.camera.presenter.PreviewPresenter
+import android.content.Context
 import com.cgfay.filter.gles.EglCore
 import com.cgfay.filter.gles.WindowSurface
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
@@ -25,7 +26,14 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * Camera renderer running on a dedicated thread.
  */
-class CameraRenderer(@NonNull presenter: PreviewPresenter) : Thread(TAG) {
+/** Listener used by [CameraRenderer] to report rendering events. */
+interface CameraRenderCallback {
+    val context: Context
+    fun onBindSharedContext(context: EGLContext)
+    fun onRecordFrameAvailable(texture: Int, timestamp: Long)
+}
+
+class CameraRenderer(@NonNull presenter: CameraRenderCallback) : Thread(TAG) {
 
     private val sync = Object()
     private var priority = Process.THREAD_PRIORITY_DISPLAY
@@ -44,7 +52,7 @@ class CameraRenderer(@NonNull presenter: PreviewPresenter) : Thread(TAG) {
     private val renderManager = RenderManager()
     private val frameRateMeter = FrameRateMeter()
     private var cameraParam = CameraParam.getInstance()
-    private val weakPresenter = WeakReference(presenter)
+    private val weakCallback = WeakReference(presenter)
     @Volatile
     private var threadStarted = false
 
@@ -141,7 +149,7 @@ class CameraRenderer(@NonNull presenter: PreviewPresenter) : Thread(TAG) {
 
     // Internal methods -------------------------------------------------
     fun initRender(surface: Surface) {
-        if (weakPresenter.get() == null) return
+        if (weakCallback.get() == null) return
         Log.d(TAG, "initRender")
         eglCore = EglCore(null, EglCore.FLAG_RECORDABLE)
         displaySurface = WindowSurface(eglCore, surface, false)
@@ -150,8 +158,8 @@ class CameraRenderer(@NonNull presenter: PreviewPresenter) : Thread(TAG) {
         GLES30.glClearColor(0f, 0f, 0f, 0f)
         GLES30.glEnable(GL10.GL_CULL_FACE)
         GLES30.glEnable(GL10.GL_DEPTH_TEST)
-        renderManager.init(weakPresenter.get()!!.context)
-        weakPresenter.get()?.onBindSharedContext(eglCore!!.eglContext)
+        renderManager.init(weakCallback.get()!!.context)
+        weakCallback.get()?.onBindSharedContext(eglCore!!.eglContext)
     }
 
     fun initRender(surfaceTexture: SurfaceTexture) {
@@ -163,8 +171,8 @@ class CameraRenderer(@NonNull presenter: PreviewPresenter) : Thread(TAG) {
         GLES30.glClearColor(0f, 0f, 0f, 0f)
         GLES30.glEnable(GL10.GL_CULL_FACE)
         GLES30.glEnable(GL10.GL_DEPTH_TEST)
-        renderManager.init(weakPresenter.get()!!.context)
-        weakPresenter.get()?.onBindSharedContext(eglCore!!.eglContext)
+        renderManager.init(weakCallback.get()!!.context)
+        weakCallback.get()?.onBindSharedContext(eglCore!!.eglContext)
     }
 
     fun setDisplaySize(width: Int, height: Int) {
@@ -181,7 +189,7 @@ class CameraRenderer(@NonNull presenter: PreviewPresenter) : Thread(TAG) {
             timeStamp = surfaceTexture.timestamp
         }
         currentTexture = renderManager.drawFrame(inputTexture, matrix)
-        weakPresenter.get()?.onRecordFrameAvailable(currentTexture, timeStamp)
+        weakCallback.get()?.onRecordFrameAvailable(currentTexture, timeStamp)
         renderManager.drawFacePoint(currentTexture)
         displaySurface!!.swapBuffers()
         synchronized(sync) {
