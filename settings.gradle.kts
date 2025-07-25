@@ -1,3 +1,5 @@
+rootProject.buildFileName = "build.gradle.kt"
+
 include(
     ":app",
     ":cameralibrary",
