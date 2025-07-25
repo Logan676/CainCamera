@@ -1,0 +1,14 @@
+include(
+    ":app",
+    ":cameralibrary",
+    ":facedetectlibrary",
+    ":filterlibrary",
+    ":videolibrary",
+    ":gdxlibrary",
+    ":widgetlibrary",
+    ":landmarklibrary",
+    ":pickerlibrary",
+    ":imagelibrary",
+    ":medialibrary",
+    ":utilslibrary"
+)
