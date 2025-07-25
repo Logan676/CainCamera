@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
@@ -28,6 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +50,7 @@ import com.cgfay.caincamera.widget.GLRecordView
 import com.cgfay.camera.widget.RecordButton
 import com.cgfay.camera.widget.RecordProgressView
 import com.cgfay.camera.widget.RecordSpeedLevelBar
+import com.cgfay.camera.widget.RecordSpeed
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.resource.FilterHelper
 import com.cgfay.filter.glfilter.resource.ResourceJsonCodec
@@ -61,8 +66,6 @@ import java.io.File
 class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     private lateinit var glRecordView: GLRecordView
-    private lateinit var progressView: RecordProgressView
-    private lateinit var recordSpeedBar: RecordSpeedLevelBar
     private lateinit var recordButton: RecordButton
 
     private lateinit var renderer: RecordRenderer
@@ -137,7 +140,6 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun hideViews() {
         runOnUiThread {
-            recordSpeedBar.visibility = View.GONE
             btnDelete.visibility = View.GONE
             btnNext.visibility = View.GONE
             btnSwitch.visibility = View.GONE
@@ -146,7 +148,6 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
 
     override fun showViews() {
         runOnUiThread {
-            recordSpeedBar.visibility = View.VISIBLE
             val showEditEnable = viewModel.recordVideoSize > 0
             btnDelete.visibility = if (showEditEnable) View.VISIBLE else View.GONE
             btnNext.visibility = if (showEditEnable) View.VISIBLE else View.GONE
@@ -156,15 +157,15 @@ class SpeedRecordActivity : BaseRecordActivity(), View.OnClickListener {
     }
 
     override fun setRecordProgress(progress: Float) {
-        runOnUiThread { progressView.progress = progress }
+        // progress handled by viewModel
     }
 
     override fun addProgressSegment(progress: Float) {
-        runOnUiThread { progressView.addProgressSegment(progress) }
+        // handled by viewModel
     }
 
     override fun deleteProgressSegment() {
-        runOnUiThread { progressView.deleteProgressSegment() }
+        // handled by viewModel
     }
 
     override fun bindSurfaceTexture(surfaceTexture: SurfaceTexture) {
@@ -259,17 +260,7 @@ fun SpeedRecordScreen(
         }.also { activity.glRecordView = it }
     }
 
-    val progressView = remember {
-        RecordProgressView(context).also { activity.progressView = it }
-    }
-
-    val recordSpeedBar = remember {
-        RecordSpeedLevelBar(context).apply {
-            setOnSpeedChangedListener { speed ->
-                viewModel.setSpeedMode(SpeedMode.valueOf(speed.speed))
-            }
-        }.also { activity.recordSpeedBar = it }
-    }
+    var speed by remember { mutableStateOf(RecordSpeed.SPEED_L2) }
 
     val recordButton = remember {
         RecordButton(context).apply {
@@ -336,13 +327,9 @@ fun SpeedRecordScreen(
                 .align(Alignment.TopCenter)
         )
 
-        AndroidView(
-            factory = { progressView },
-            update = {
-                it.setProgress(uiState.progress)
-                it.clear()
-                uiState.progressSegments.forEach { seg -> it.addProgressSegment(seg) }
-            },
+        RecordProgressView(
+            progress = uiState.progress,
+            progressSegments = uiState.progressSegments,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -350,6 +337,7 @@ fun SpeedRecordScreen(
                     end = dimensionResource(R.dimen.dp6),
                     top = dimensionResource(R.dimen.dp6)
                 )
+                .height(dimensionResource(R.dimen.dp6))
                 .align(Alignment.TopCenter)
         )
 
@@ -366,19 +354,22 @@ fun SpeedRecordScreen(
                 )
         )
 
-        AndroidView(
-            factory = { recordSpeedBar },
-            update = { view ->
-                view.visibility = if (uiState.showViews) View.VISIBLE else View.GONE
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(
-                    start = dimensionResource(R.dimen.dp50),
-                    end = dimensionResource(R.dimen.dp50),
-                    bottom = dimensionResource(R.dimen.dp20)
-                )
-        )
+        if (uiState.showViews) {
+            RecordSpeedLevelBar(
+                currentSpeed = speed,
+                onSpeedChanged = {
+                    speed = it
+                    viewModel.setSpeedMode(SpeedMode.valueOf(it.speed))
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        start = dimensionResource(R.dimen.dp50),
+                        end = dimensionResource(R.dimen.dp50),
+                        bottom = dimensionResource(R.dimen.dp20)
+                    )
+            )
+        }
 
         AndroidView(
             factory = { recordButton },
