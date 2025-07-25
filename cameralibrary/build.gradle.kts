@@ -81,6 +81,7 @@ dependencies {
     implementation("androidx.compose.material:material:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     implementation("androidx.activity:activity-compose:${rootProject.extra["activityComposeVersion"]}")
+    implementation("io.coil-kt:coil-compose:${rootProject.extra["coilComposeVersion"]}")
 
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
