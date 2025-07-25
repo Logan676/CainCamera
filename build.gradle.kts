@@ -4,7 +4,7 @@ apply(from = "versions.gradle.kts")
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         // Updated to support compileSdk 35
@@ -19,7 +19,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
         flatDir {
             dirs("libs")
         }
