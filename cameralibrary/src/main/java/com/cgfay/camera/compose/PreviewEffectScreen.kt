@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.cgfay.cameralibrary.R
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.makeup.bean.DynamicMakeup
@@ -31,8 +30,8 @@ import com.cgfay.filter.glfilter.resource.FilterHelper
 import com.cgfay.filter.glfilter.resource.MakeupHelper
 import com.cgfay.filter.glfilter.resource.ResourceJsonCodec
 import com.cgfay.filter.glfilter.resource.bean.ResourceData
+import coil.compose.AsyncImage
 import com.cgfay.uitls.utils.BitmapUtils
-import com.cgfay.camera.loader.impl.CameraMediaLoader
 import java.io.File
 
 @Composable
@@ -169,46 +168,41 @@ private fun MakeupList(names: Array<String>, selected: Int, onSelect: (Int) -> U
 @Composable
 private fun FilterList(list: List<ResourceData>, selected: Int, onSelect: (Int) -> Unit) {
     val context = LocalContext.current
-    val loader = remember { CameraMediaLoader() }
     LazyRow(modifier = Modifier.fillMaxWidth()) {
         itemsIndexed(list) { index, item ->
-            AndroidView(
+            val bitmap = remember(item.thumbPath) {
+                if (item.thumbPath.startsWith("assets://")) {
+                    BitmapUtils.getImageFromAssetsFile(
+                        context,
+                        item.thumbPath.removePrefix("assets://")
+                    )
+                } else {
+                    null
+                }
+            }
+            Box(
                 modifier = Modifier
                     .padding(4.dp)
                     .size(70.dp)
-                    .clickable { onSelect(index) },
-                factory = { ctx ->
-                    android.widget.FrameLayout(ctx).apply {
-                        setPadding(2, 2, 2, 2)
-                        addView(android.widget.ImageView(ctx).apply {
-                            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                        }, android.widget.FrameLayout.LayoutParams(
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-                        ))
-                    }
-                },
-                update = { layout ->
-                    val imageView = layout.getChildAt(0) as android.widget.ImageView
-                    if (item.thumbPath.startsWith("assets://")) {
-                        imageView.setImageBitmap(
-                            BitmapUtils.getImageFromAssetsFile(
-                                context,
-                                item.thumbPath.removePrefix("assets://")
-                            )
-                        )
-                    } else {
-                        loader.loadThumbnail(
-                            context,
-                            imageView,
-                            Uri.parse(item.thumbPath),
-                            R.drawable.ic_camera_thumbnail_placeholder,
-                            0
-                        )
-                    }
-                    layout.setBackgroundResource(if (index == selected) R.drawable.ic_camera_effect_selected else 0)
+                    .clickable { onSelect(index) }
+                    .then(if (index == selected) Modifier.border(2.dp, Color.White) else Modifier),
+                contentAlignment = Alignment.Center
+            ) {
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    AsyncImage(
+                        model = Uri.parse(item.thumbPath),
+                        placeholder = painterResource(R.drawable.ic_camera_thumbnail_placeholder),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
-            )
+            }
         }
     }
 }
