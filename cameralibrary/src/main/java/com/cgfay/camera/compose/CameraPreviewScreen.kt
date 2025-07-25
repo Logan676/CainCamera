@@ -35,6 +35,7 @@ import com.cgfay.filter.glfilter.resource.ResourceHelper
 import com.cgfay.filter.glfilter.resource.bean.ResourceData
 import com.cgfay.uitls.utils.BitmapUtils
 import com.cgfay.camera.compose.PreviewEffectScreen
+import com.cgfay.camera.compose.PreviewSettingScreen
 
 @Composable
 fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
@@ -52,6 +53,13 @@ fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
         ) {
             Text(text = "Effects")
+        }
+
+        Button(
+            onClick = { viewModel.toggleSettingPanel() },
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        ) {
+            Text(text = "Settings")
         }
 
         AnimatedVisibility(
@@ -73,6 +81,22 @@ fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
                 onCompareEffect = { viewModel.onCompareEffect(it) },
                 onFilterChange = { color -> viewModel.onFilterChange(color) },
                 onMakeupChange = { makeup -> viewModel.onMakeupChange(makeup) }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = viewModel.showSettingPanel,
+            enter = slideInVertically { it } + fadeIn(),
+            exit = slideOutVertically { it } + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            PreviewSettingScreen(
+                onFlashChanged = {},
+                onTouchTakeChanged = {},
+                onTimeLapseChanged = {},
+                onOpenCameraSetting = {},
+                onLuminousCompensationChanged = {},
+                onEdgeBlurChanged = {}
             )
         }
     }
