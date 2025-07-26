@@ -74,6 +74,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("androidx.appcompat:appcompat:${rootProject.extra["appcompatVersion"]}")
     implementation("androidx.constraintlayout:constraintlayout:${rootProject.extra["constraintLayoutVersion"]}")
+    val composeVersion = rootProject.extra["composeVersion"] as String
+    implementation("androidx.compose.runtime:runtime:$composeVersion")
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
     androidTestImplementation("androidx.test.espresso:espresso-core:${rootProject.extra["espressoVersion"]}")
