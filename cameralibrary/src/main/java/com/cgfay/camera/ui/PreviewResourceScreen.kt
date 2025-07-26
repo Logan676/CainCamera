@@ -1,4 +1,4 @@
-package com.cgfay.camera.compose
+package com.cgfay.camera.ui
 
 import android.net.Uri
 import androidx.compose.foundation.background

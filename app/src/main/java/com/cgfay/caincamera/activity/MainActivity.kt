@@ -25,7 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cgfay.caincamera.R
 import com.cgfay.camera.PreviewEngine
-import com.cgfay.camera.fragment.NormalMediaSelector
+import com.cgfay.camera.selector.NormalMediaSelector
 import com.cgfay.camera.model.AspectRatio
 import com.cgfay.camera.listener.OnPreviewCaptureListener
 import com.cgfay.filter.glfilter.resource.FilterHelper

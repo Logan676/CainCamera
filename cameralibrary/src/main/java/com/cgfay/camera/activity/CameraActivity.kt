@@ -12,8 +12,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import com.cgfay.cameralibrary.R
-import com.cgfay.camera.compose.CameraPreviewScreen
-import com.cgfay.camera.compose.CameraPreviewViewModel
+import com.cgfay.camera.ui.CameraPreviewScreen
+import com.cgfay.camera.viewmodel.CameraPreviewViewModel
 import com.cgfay.facedetect.engine.FaceTracker
 import com.cgfay.uitls.utils.NotchUtils
 
