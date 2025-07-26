@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.cgfay.filter.glfilter.resource.bean.ResourceData
 import com.cgfay.video.bean.EffectMimeType
 import com.cgfay.video.bean.EffectType
-import com.cgfay.video.fragment.EffectFilterHelper
+import com.cgfay.video.fragment.EffectFilterRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -27,7 +27,7 @@ class VideoEditViewModel : ViewModel() {
 
     init {
         // initialize with filter effects
-        _effectList.value = EffectFilterHelper.getInstance().getEffectFilterData()
+        _effectList.value = EffectFilterRepository.getEffectFilterData()
     }
 
     fun setVideoPath(path: String) {
@@ -38,9 +38,9 @@ class VideoEditViewModel : ViewModel() {
         _category.value = category
         _selectedIndex.value = -1
         _effectList.value = when (category) {
-            EffectMimeType.FILTER -> EffectFilterHelper.getInstance().getEffectFilterData()
-            EffectMimeType.TRANSITION -> EffectFilterHelper.getInstance().getEffectTransitionData()
-            EffectMimeType.MULTIFRAME -> EffectFilterHelper.getInstance().getEffectMultiData()
+            EffectMimeType.FILTER -> EffectFilterRepository.getEffectFilterData()
+            EffectMimeType.TRANSITION -> EffectFilterRepository.getEffectTransitionData()
+            EffectMimeType.MULTIFRAME -> EffectFilterRepository.getEffectMultiData()
             EffectMimeType.TIME -> emptyList()
         }
     }
