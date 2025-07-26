@@ -9,7 +9,9 @@ import com.cgfay.uitls.utils.FileUtils;
 /**
  * 媒体编辑器
  */
-public class CainMediaEditor {
+import java.io.Closeable;
+
+public class CainMediaEditor implements Closeable {
 
     private static final String TAG = "CainMediaEditor";
 
@@ -57,12 +59,6 @@ public class CainMediaEditor {
         handle = nativeInit();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        release();
-        super.finalize();
-    }
-
     /**
      * 释放资源
      */
@@ -71,6 +67,11 @@ public class CainMediaEditor {
             nativeRelease(handle);
             handle = 0;
         }
+    }
+
+    @Override
+    public void close() {
+        release();
     }
 
     /**

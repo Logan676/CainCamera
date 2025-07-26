@@ -7,7 +7,9 @@ import android.util.Log;
  * @author CainHuang
  * @date 2019/6/30
  */
-public class SoundTouch {
+import java.io.Closeable;
+
+public class SoundTouch implements Closeable {
 
     private static final String TAG = "SoundTouch";
 
@@ -103,16 +105,14 @@ public class SoundTouch {
         return receiveSamples(handle, output, output.length);
     }
 
-    public void close() {
+    public void release() {
         nativeRelease(handle);
         handle = 0;
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        if (handle != 0) {
-            close();
-        }
-        super.finalize();
+    public void close() {
+        release();
     }
+
 }

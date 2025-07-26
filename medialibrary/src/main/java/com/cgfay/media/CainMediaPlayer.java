@@ -31,7 +31,9 @@ import java.util.Map;
  * 播放器的实现仿照MediaPlayer 的实现逻辑
  * 详情请参考 android.media.MediaPlayer.java 和 android_media_MediaPlayer.cpp
  */
-public class CainMediaPlayer implements IMediaPlayer {
+import java.io.Closeable;
+
+public class CainMediaPlayer implements IMediaPlayer, Closeable {
 
     /**
      Constant to retrieve only the new metadata since the last
@@ -711,6 +713,11 @@ public class CainMediaPlayer implements IMediaPlayer {
         _release();
     }
 
+    @Override
+    public void close() {
+        release();
+    }
+
     private native void _release();
 
     /**
@@ -924,12 +931,6 @@ public class CainMediaPlayer implements IMediaPlayer {
     private static native void native_init();
     private native void native_setup(Object mediaplayer_this);
     private native void native_finalize();
-
-    @Override
-    protected void finalize() throws Throwable {
-        native_finalize();
-        super.finalize();
-    }
 
     private static void postEventFromNative(Object mediaplayer_ref,
                                             int what, int arg1, int arg2, Object obj) {
