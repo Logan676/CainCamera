@@ -5,8 +5,10 @@ import com.cgfay.uitls.utils.NativeLibraryLoader
 import java.io.Closeable
 
 class CainMediaEditor : Closeable {
+
     companion object {
         private const val TAG = "CainMediaEditor"
+
         init {
             NativeLibraryLoader.loadLibraries(
                 "ffmpeg",
@@ -15,9 +17,9 @@ class CainMediaEditor : Closeable {
                 "media_editor"
             )
         }
-        @JvmStatic private external fun nativeInit(): Long
     }
 
+    private external fun nativeInit(): Long
     private external fun nativeRelease(handle: Long)
     private external fun videoCut(handle: Long, srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?)
     private external fun audioCut(handle: Long, srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?)
@@ -28,7 +30,7 @@ class CainMediaEditor : Closeable {
     fun release() {
         if (handle != 0L) {
             nativeRelease(handle)
-            handle = 0L
+            handle = 0
         }
     }
 
@@ -82,4 +84,3 @@ class CainMediaEditor : Closeable {
         fun onError(msg: String)
     }
 }
-

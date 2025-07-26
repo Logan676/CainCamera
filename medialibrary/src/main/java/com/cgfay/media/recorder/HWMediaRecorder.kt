@@ -1,11 +1,6 @@
 package com.cgfay.media.recorder
 
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 
 /**
  * Media recorder supporting variable speed recording.
@@ -27,7 +22,7 @@ class HWMediaRecorder(
     private var recorderCount = 0
     private var processTime = 0L
 
-    var isRecording by mutableStateOf(false)
+    var isRecording: Boolean = false
         private set
 
     fun release() {
@@ -91,9 +86,3 @@ class HWMediaRecorder(
     }
 }
 
-/**
- * Compose helper used to remember [HWMediaRecorder] instance.
- */
-@Composable
-fun rememberHWMediaRecorder(listener: OnRecordStateListener): HWMediaRecorder =
-    remember(listener) { HWMediaRecorder(listener) }

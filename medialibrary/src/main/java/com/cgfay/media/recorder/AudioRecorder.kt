@@ -4,10 +4,6 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.SystemClock
-import androidx.compose.material.Button
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -171,24 +167,4 @@ class AudioRecorder : Runnable {
 /**
  * Simple Compose button that controls audio recording.
  */
-@Composable
-fun AudioRecorderButton(
-    recorder: AudioRecorder,
-    modifier: Modifier = Modifier
-) {
-    var isRecording by remember { mutableStateOf(false) }
-    Button(
-        onClick = {
-            if (isRecording) {
-                recorder.stopRecord()
-            } else {
-                recorder.startRecord()
-            }
-            isRecording = !isRecording
-        },
-        modifier = modifier
-    ) {
-        Text(if (isRecording) "Stop" else "Record")
-    }
-}
 
