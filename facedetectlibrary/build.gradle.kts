@@ -45,6 +45,8 @@ dependencies {
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
     androidTestImplementation("androidx.test.espresso:espresso-core:${rootProject.extra["espressoVersion"]}")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:${rootProject.extra["composeVersion"]}")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(mapOf("name" to "MGFaceppSDK-0.5.2", "ext" to "aar"))
     implementation(mapOf("name" to "MGLicenseManagerSDK-0.3.1", "ext" to "aar"))
 }

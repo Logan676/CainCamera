@@ -34,4 +34,6 @@ dependencies {
     testImplementation("junit:junit:${project.rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${project.rootProject.extra["androidXJunitVersion"]}")
     androidTestImplementation("androidx.test.espresso:espresso-core:${project.rootProject.extra["espressoVersion"]}")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:${project.rootProject.extra["composeVersion"]}")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
