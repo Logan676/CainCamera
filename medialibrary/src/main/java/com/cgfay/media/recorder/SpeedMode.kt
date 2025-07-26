@@ -1,11 +1,10 @@
 package com.cgfay.media.recorder
 
-import androidx.compose.runtime.Immutable
 
 /**
  * Speed mode used for recording.
  */
-@Immutable
+enum class SpeedMode(val type: Int, val speed: Float) {
 enum class SpeedMode(val type: Int, val speed: Float) {
     MODE_EXTRA_SLOW(1, 1f / 3f),
     MODE_SLOW(2, 0.5f),

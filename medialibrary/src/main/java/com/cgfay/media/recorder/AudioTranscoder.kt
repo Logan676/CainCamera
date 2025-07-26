@@ -1,7 +1,6 @@
 package com.cgfay.media.recorder
 
 import android.media.AudioFormat
-import androidx.compose.runtime.Stable
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.ShortBuffer
@@ -9,7 +8,6 @@ import java.nio.ShortBuffer
 /**
  * Audio speed and pitch processor, based on ExoPlayer's SonicAudioProcessor.
  */
-@Stable
 class AudioTranscoder {
 
     companion object {

@@ -1,13 +1,9 @@
 package com.cgfay.media
 
-import androidx.annotation.NonNull
 import com.cgfay.uitls.utils.FileUtils
 import com.cgfay.uitls.utils.NativeLibraryLoader
 import java.io.Closeable
 
-/**
- * Media editing helper using native implementation.
- */
 class CainMediaEditor : Closeable {
 
     companion object {
@@ -31,7 +27,6 @@ class CainMediaEditor : Closeable {
 
     private var handle: Long = nativeInit()
 
-    /** Release native resources */
     fun release() {
         if (handle != 0L) {
             nativeRelease(handle)
@@ -43,9 +38,6 @@ class CainMediaEditor : Closeable {
         release()
     }
 
-    /**
-     * Cut video from [start] with [duration].
-     */
     fun videoCut(srcPath: String, dstPath: String, start: Float, duration: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             videoCut(handle, srcPath, dstPath, start, duration, 1.0f, listener)
@@ -54,7 +46,6 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** Cut video with speed. */
     fun videoSpeedCut(srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             videoCut(handle, srcPath, dstPath, start, duration, speed, listener)
@@ -63,7 +54,6 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** Cut audio from [start] with [duration]. */
     fun audioCut(srcPath: String, dstPath: String, start: Float, duration: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             audioCut(handle, srcPath, dstPath, start, duration, 1.0f, listener)
@@ -72,7 +62,6 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** Cut audio with speed. */
     fun audioSpeedCut(srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             audioCut(handle, srcPath, dstPath, start, duration, speed, listener)
@@ -81,7 +70,6 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** Reverse video. */
     fun videoReverse(srcPath: String, dstPath: String, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             videoReverse(handle, srcPath, dstPath, listener)

@@ -3,6 +3,7 @@ package com.cgfay.media
 import android.content.ContentResolver
 import android.content.Context
 import android.content.res.AssetFileDescriptor
+import android.graphics.SurfaceTexture
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Handler
@@ -19,40 +20,60 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import java.util.Map
 
-/**
- * Simple video player backed by native implementation.
- */
 class VideoPlayer : IMediaPlayer {
 
     companion object {
         private const val TAG = "VideoPlayer"
 
         init {
-            NativeLibraryLoader.loadLibraries("ffmpeg", "yuv", "videoplayer")
+            NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "yuv",
+                "videoplayer"
+            )
             native_init()
         }
 
-        @JvmStatic private external fun native_init()
+        @JvmStatic
+        private external fun native_init()
         @JvmStatic
         private fun postEventFromNative(ref: Any, what: Int, arg1: Int, arg2: Int, obj: Any?) {
             val mp = (ref as WeakReference<*>).get() as? VideoPlayer ?: return
-            mp.mEventHandler?.sendMessage(mp.mEventHandler!!.obtainMessage(what, arg1, arg2, obj))
+            mp.mEventHandler?.let {
+                val m = it.obtainMessage(what, arg1, arg2, obj)
+                it.sendMessage(m)
+            }
         }
 
-        private const val MEDIA_NOP = 0
-        private const val MEDIA_PREPARED = 1
-        private const val MEDIA_STARTED = 2
-        private const val MEDIA_PLAYBACK_COMPLETE = 3
-        private const val MEDIA_SEEK_COMPLETE = 4
-        private const val MEDIA_BUFFERING_UPDATE = 5
-        private const val MEDIA_SET_VIDEO_SIZE = 6
-        private const val MEDIA_ERROR = 100
-        private const val MEDIA_INFO = 200
-        private const val MEDIA_CURRENT = 300
+        fun create(context: Context, uri: Uri, holder: SurfaceHolder? = null): VideoPlayer? {
+            return try {
+                val mp = VideoPlayer()
+                mp.setDataSource(context, uri)
+                holder?.let { mp.setDisplay(it) }
+                mp.prepare()
+                mp
+            } catch (ex: Exception) {
+                Log.d(TAG, "create failed:", ex)
+                null
+            }
+        }
+
+        fun create(context: Context, resid: Int): VideoPlayer? {
+            return try {
+                val afd = context.resources.openRawResourceFd(resid) ?: return null
+                val mp = VideoPlayer()
+                mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                afd.close()
+                mp.prepare()
+                mp
+            } catch (ex: Exception) {
+                Log.d(TAG, "create failed:", ex)
+                null
+            }
+        }
     }
 
-    // native methods
-    private external fun native_setup(player: Any)
+    private external fun native_setup(thiz: Any)
     private external fun native_finalize()
     private external fun _release()
     private external fun _reset()
@@ -65,7 +86,7 @@ class VideoPlayer : IMediaPlayer {
     private external fun _setSpeed(speed: Float)
     private external fun _setLooping(looping: Boolean)
     private external fun _setRange(start: Float, end: Float)
-    private external fun _setVolume(left: Float, right: Float)
+    private external fun _setVolume(leftVolume: Float, rightVolume: Float)
     private external fun _setMute(mute: Boolean)
     private external fun _prepare()
     private external fun _start()
@@ -85,24 +106,14 @@ class VideoPlayer : IMediaPlayer {
     @AccessedByNative
     private var mNativeContext: Long = 0
     private var mSurfaceHolder: SurfaceHolder? = null
-    private var mEventHandler: EventHandler? = null
+    private var mEventHandler: EventHandler?
     private var mWakeLock: PowerManager.WakeLock? = null
     private var mScreenOnWhilePlaying = false
     private var mStayAwake = false
-    private var mSessionId = 0
-
-    private var mOnPreparedListener: IMediaPlayer.OnPreparedListener? = null
-    private var mOnCompletionListener: IMediaPlayer.OnCompletionListener? = null
-    private var mOnBufferingUpdateListener: IMediaPlayer.OnBufferingUpdateListener? = null
-    private var mOnSeekCompleteListener: IMediaPlayer.OnSeekCompleteListener? = null
-    private var mOnVideoSizeChangedListener: IMediaPlayer.OnVideoSizeChangedListener? = null
-    private var mOnErrorListener: IMediaPlayer.OnErrorListener? = null
-    private var mOnInfoListener: IMediaPlayer.OnInfoListener? = null
-    private var mOnCurrentPositionListener: IMediaPlayer.OnCurrentPositionListener? = null
 
     init {
         val looper = Looper.myLooper() ?: Looper.getMainLooper()
-        mEventHandler = looper?.let { EventHandler(this, it) }
+        mEventHandler = if (looper != null) EventHandler(this, looper) else null
         native_setup(WeakReference(this))
     }
 
@@ -120,36 +131,6 @@ class VideoPlayer : IMediaPlayer {
         mSurfaceHolder = null
         _setVideoSurface(surface)
         updateSurfaceScreenOn()
-    }
-
-    companion object {
-        fun create(context: Context, uri: Uri): VideoPlayer? = create(context, uri, null)
-        fun create(context: Context, uri: Uri, holder: SurfaceHolder?): VideoPlayer? {
-            return try {
-                val mp = VideoPlayer()
-                mp.setDataSource(context, uri)
-                holder?.let { mp.setDisplay(it) }
-                mp.prepare()
-                mp
-            } catch (e: Exception) {
-                Log.d(TAG, "create failed:", e)
-                null
-            }
-        }
-
-        fun create(context: Context, resid: Int): VideoPlayer? {
-            return try {
-                val afd = context.resources.openRawResourceFd(resid) ?: return null
-                val mp = VideoPlayer()
-                mp.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                afd.close()
-                mp.prepare()
-                mp
-            } catch (e: Exception) {
-                Log.d(TAG, "create failed:", e)
-                null
-            }
-        }
     }
 
     override fun setDataSource(context: Context, uri: Uri) {
@@ -173,10 +154,9 @@ class VideoPlayer : IMediaPlayer {
                 setDataSource(fd.fileDescriptor, fd.startOffset, fd.declaredLength)
             }
             return
-        } catch (_: SecurityException) {
-        } catch (_: IOException) {
+        } catch (_: Exception) {
         } finally {
-            fd?.close()
+            try { fd?.close() } catch (_: IOException) {}
         }
         Log.d(TAG, "Couldn't open file on client side, trying server side")
         setDataSource(uri.toString(), headers)
@@ -211,22 +191,49 @@ class VideoPlayer : IMediaPlayer {
     }
 
     override fun prepare() { _prepare() }
-    override fun prepareAsync() { /* not implemented */ }
-    override fun start() { _start() }
-    override fun stop() { _stop() }
-    override fun pause() { _pause() }
-    override fun resume() { _resume() }
-    override fun setWakeMode(context: Context, mode: Int) {
-        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        if (mWakeLock != null) {
-            if (mWakeLock!!.isHeld) {
-                mWakeLock!!.release()
-            }
-            mWakeLock = null
-        }
-        mWakeLock = pm.newWakeLock(mode or PowerManager.ON_AFTER_RELEASE, TAG)
-        mWakeLock?.setReferenceCounted(false)
+    fun prepareAsync() { /* not implemented previously */ }
+    fun start() { _start() }
+    fun pause() { _pause() }
+    fun resume() { _resume() }
+    fun stop() { _stop() }
+    fun setDecodeOnPause(decodeOnPause: Boolean) { _setDecodeOnPause(decodeOnPause) }
+    override fun seekTo(msec: Float) { _seekTo(msec) }
+
+    override fun getCurrentPosition(): Long = _getCurrentPosition()
+    override fun getDuration(): Long = _getDuration()
+    override fun getRotate(): Int = _getRotate()
+    override fun getVideoWidth(): Int = _getVideoWidth()
+    override fun getVideoHeight(): Int = _getVideoHeight()
+    override fun isPlaying(): Boolean = _isPlaying()
+    override fun isLooping(): Boolean = _isLooping()
+
+    override fun release() {
+        stayAwake(false)
+        updateSurfaceScreenOn()
+        mOnPreparedListener = null
+        mOnBufferingUpdateListener = null
+        mOnCompletionListener = null
+        mOnSeekCompleteListener = null
+        mOnErrorListener = null
+        mOnInfoListener = null
+        mOnVideoSizeChangedListener = null
+        mOnCurrentPositionListener = null
+        _release()
     }
+
+    override fun reset() {
+        stayAwake(false)
+        _reset()
+        mEventHandler?.removeCallbacksAndMessages(null)
+    }
+
+    override fun setAudioStreamType(streamtype: Int) { /* no-op */ }
+    override fun setLooping(looping: Boolean) { _setLooping(looping) }
+    override fun setVolume(leftVolume: Float, rightVolume: Float) { _setVolume(leftVolume, rightVolume) }
+    override fun setAudioSessionId(sessionId: Int) {}
+    override fun getAudioSessionId(): Int = 0
+    override fun setMute(mute: Boolean) { _setMute(mute) }
+
     override fun setScreenOnWhilePlaying(screenOn: Boolean) {
         if (mScreenOnWhilePlaying != screenOn) {
             if (screenOn && mSurfaceHolder == null) {
@@ -253,52 +260,6 @@ class VideoPlayer : IMediaPlayer {
         mSurfaceHolder?.setKeepScreenOn(mScreenOnWhilePlaying && mStayAwake)
     }
 
-    override fun getRotate(): Int = _getRotate()
-    override fun getVideoWidth(): Int = _getVideoWidth()
-    override fun getVideoHeight(): Int = _getVideoHeight()
-    override fun isPlaying(): Boolean = _isPlaying()
-    override fun seekTo(msec: Float) { _seekTo(msec) }
-    override fun getCurrentPosition(): Long = _getCurrentPosition()
-    override fun getDuration(): Long = _getDuration()
-
-    override fun release() {
-        stayAwake(false)
-        updateSurfaceScreenOn()
-        mOnPreparedListener = null
-        mOnBufferingUpdateListener = null
-        mOnCompletionListener = null
-        mOnSeekCompleteListener = null
-        mOnErrorListener = null
-        mOnInfoListener = null
-        mOnVideoSizeChangedListener = null
-        mOnCurrentPositionListener = null
-        _release()
-    }
-
-    override fun reset() {
-        stayAwake(false)
-        _reset()
-        mEventHandler?.removeCallbacksAndMessages(null)
-    }
-
-    override fun setAudioStreamType(streamtype: Int) { /* no-op */ }
-    override fun setLooping(looping: Boolean) { _setLooping(looping) }
-    override fun isLooping(): Boolean = _isLooping()
-    override fun setVolume(leftVolume: Float, rightVolume: Float) { _setVolume(leftVolume, rightVolume) }
-    override fun setAudioSessionId(sessionId: Int) { mSessionId = sessionId }
-    override fun getAudioSessionId(): Int = mSessionId
-    override fun setMute(mute: Boolean) { _setMute(mute) }
-
-    fun setAudioDecoder(decoder: String) { _setAudioDecoder(decoder) }
-    fun setVideoDecoder(decoder: String) { _setVideoDecoder(decoder) }
-    fun setSpeed(speed: Float) { _setSpeed(speed) }
-    fun setRange(startMs: Float, endMs: Float) { _setRange(startMs, endMs) }
-    fun setDecodeOnPause(decodeOnPause: Boolean) { _setDecodeOnPause(decodeOnPause) }
-
-    protected fun finalize() {
-        native_finalize()
-    }
-
     private inner class EventHandler(mp: VideoPlayer, looper: Looper) : Handler(looper) {
         private val mVideoPlayer = mp
         override fun handleMessage(msg: Message) {
@@ -311,28 +272,77 @@ class VideoPlayer : IMediaPlayer {
                 MEDIA_PLAYBACK_COMPLETE -> mOnCompletionListener?.onCompletion(mVideoPlayer)
                 MEDIA_STARTED -> Log.d(TAG, "music player is started!")
                 MEDIA_SEEK_COMPLETE -> mOnSeekCompleteListener?.onSeekComplete(mVideoPlayer)
-                MEDIA_BUFFERING_UPDATE -> mOnBufferingUpdateListener?.onBufferingUpdate(mVideoPlayer, msg.arg1)
-                MEDIA_SET_VIDEO_SIZE -> mOnVideoSizeChangedListener?.onVideoSizeChanged(mVideoPlayer, msg.arg1, msg.arg2)
+                MEDIA_BUFFERING_UPDATE -> {
+                    mOnBufferingUpdateListener?.onBufferingUpdate(mVideoPlayer, msg.arg1)
+                    return
+                }
+                MEDIA_SET_VIDEO_SIZE -> {
+                    mOnVideoSizeChangedListener?.onVideoSizeChanged(mVideoPlayer, msg.arg1, msg.arg2)
+                    return
+                }
                 MEDIA_ERROR -> {
-                    Log.e(TAG, "Error (${msg.arg1},${msg.arg2})")
-                    val handled = mOnErrorListener?.onError(mVideoPlayer, msg.arg1, msg.arg2) ?: false
-                    if (!handled) {
+                    Log.e(TAG, "Error (" + msg.arg1 + "," + msg.arg2 + ")")
+                    val errorWasHandled = mOnErrorListener?.onError(mVideoPlayer, msg.arg1, msg.arg2) ?: false
+                    if (!errorWasHandled) {
                         mOnCompletionListener?.onCompletion(mVideoPlayer)
                     }
                 }
-                MEDIA_INFO -> mOnInfoListener?.onInfo(mVideoPlayer, msg.arg1, msg.arg2)
+                MEDIA_INFO -> {
+                    if (msg.arg1 != MEDIA_INFO_VIDEO_TRACK_LAGGING) {
+                        Log.i(TAG, "Info (" + msg.arg1 + "," + msg.arg2 + ")")
+                    }
+                    mOnInfoListener?.onInfo(mVideoPlayer, msg.arg1, msg.arg2)
+                    return
+                }
                 MEDIA_CURRENT -> mOnCurrentPositionListener?.onCurrentPosition(mVideoPlayer, msg.arg1.toLong(), msg.arg2.toLong())
-                else -> Log.e(TAG, "Unknown message type ${msg.what}")
+                else -> Log.e(TAG, "Unknown message type " + msg.what)
             }
         }
     }
 
-    override fun setOnPreparedListener(listener: IMediaPlayer.OnPreparedListener?) { mOnPreparedListener = listener }
-    override fun setOnCompletionListener(listener: IMediaPlayer.OnCompletionListener?) { mOnCompletionListener = listener }
-    override fun setOnBufferingUpdateListener(listener: IMediaPlayer.OnBufferingUpdateListener?) { mOnBufferingUpdateListener = listener }
-    override fun setOnSeekCompleteListener(listener: IMediaPlayer.OnSeekCompleteListener?) { mOnSeekCompleteListener = listener }
-    override fun setOnVideoSizeChangedListener(listener: IMediaPlayer.OnVideoSizeChangedListener?) { mOnVideoSizeChangedListener = listener }
-    override fun setOnErrorListener(listener: IMediaPlayer.OnErrorListener?) { mOnErrorListener = listener }
-    override fun setOnInfoListener(listener: IMediaPlayer.OnInfoListener?) { mOnInfoListener = listener }
-    override fun setOnCurrentPositionListener(listener: IMediaPlayer.OnCurrentPositionListener?) { mOnCurrentPositionListener = listener }
+    override fun setOnPreparedListener(listener: IMediaPlayer.OnPreparedListener?) {
+        mOnPreparedListener = listener
+    }
+    override fun setOnCompletionListener(listener: IMediaPlayer.OnCompletionListener?) {
+        mOnCompletionListener = listener
+    }
+    override fun setOnBufferingUpdateListener(listener: IMediaPlayer.OnBufferingUpdateListener?) {
+        mOnBufferingUpdateListener = listener
+    }
+    override fun setOnSeekCompleteListener(listener: IMediaPlayer.OnSeekCompleteListener?) {
+        mOnSeekCompleteListener = listener
+    }
+    override fun setOnVideoSizeChangedListener(listener: IMediaPlayer.OnVideoSizeChangedListener?) {
+        mOnVideoSizeChangedListener = listener
+    }
+    override fun setOnErrorListener(listener: IMediaPlayer.OnErrorListener?) {
+        mOnErrorListener = listener
+    }
+    override fun setOnInfoListener(listener: IMediaPlayer.OnInfoListener?) {
+        mOnInfoListener = listener
+    }
+    override fun setOnCurrentPositionListener(listener: IMediaPlayer.OnCurrentPositionListener?) {
+        mOnCurrentPositionListener = listener
+    }
+
+    private var mOnPreparedListener: IMediaPlayer.OnPreparedListener? = null
+    private var mOnBufferingUpdateListener: IMediaPlayer.OnBufferingUpdateListener? = null
+    private var mOnCompletionListener: IMediaPlayer.OnCompletionListener? = null
+    private var mOnSeekCompleteListener: IMediaPlayer.OnSeekCompleteListener? = null
+    private var mOnErrorListener: IMediaPlayer.OnErrorListener? = null
+    private var mOnInfoListener: IMediaPlayer.OnInfoListener? = null
+    private var mOnVideoSizeChangedListener: IMediaPlayer.OnVideoSizeChangedListener? = null
+    private var mOnCurrentPositionListener: IMediaPlayer.OnCurrentPositionListener? = null
+
+    private companion object {
+        const val MEDIA_PREPARED = 1
+        const val MEDIA_STARTED = 2
+        const val MEDIA_PLAYBACK_COMPLETE = 3
+        const val MEDIA_SEEK_COMPLETE = 4
+        const val MEDIA_BUFFERING_UPDATE = 5
+        const val MEDIA_SET_VIDEO_SIZE = 6
+        const val MEDIA_ERROR = 100
+        const val MEDIA_INFO = 200
+        const val MEDIA_CURRENT = 300
+    }
 }
