@@ -1,14 +1,21 @@
 package com.cgfay.filter.ndkfilter
 
 import android.graphics.Bitmap
+import android.util.Log
 
 /**
  * Image filters implemented with native code.
  */
 object ImageFilter {
+    private const val TAG = "ImageFilter"
 
     init {
-        System.loadLibrary("nativefilter")
+        try {
+            System.loadLibrary("nativefilter")
+        } catch (e: UnsatisfiedLinkError) {
+            Log.e(TAG, "Failed to load native library nativefilter", e)
+            throw RuntimeException("Failed to load native library: nativefilter", e)
+        }
     }
 
     /** Obtain the singleton instance for Java callers. */

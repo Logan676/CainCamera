@@ -19,7 +19,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.cgfay.media.CainCommandEditor
+import com.cgfay.media.command.CommandBuilder
+import com.cgfay.media.command.CommandExecutor
+import com.cgfay.media.command.AVOperations
 import com.cgfay.media.VideoEditorUtil
 import com.cgfay.uitls.bean.MusicData
 import com.cgfay.uitls.utils.FileUtils
@@ -139,17 +141,17 @@ fun musicMergeCommand(
     onComplete: (Boolean, String?) -> Unit
 ) {
     val handler = Handler(Looper.getMainLooper())
-    val editor = CainCommandEditor()
-    val duration = min(CainCommandEditor.getDuration(videoPath) / 1000, musicDuration.toInt())
+    val editor = CommandExecutor()
+    val duration = min(AVOperations.getDuration(videoPath) / 1000, musicDuration.toInt())
     val tmpAACPath = VideoEditorUtil.createPathInBox(context, "aac")
-    editor.execCommand(CainCommandEditor.audioCut(musicPath, tmpAACPath, 10 * 1000, duration)) { result ->
+    editor.execCommand(CommandBuilder.audioCut(musicPath, tmpAACPath, 10 * 1000, duration)) { result ->
         if (result < 0) {
             FileUtils.deleteFile(tmpAACPath)
             handler.post { onComplete(false, null) }
         } else {
             val output = VideoEditorUtil.createFileInBox(context, "mp4")
             editor.execCommand(
-                CainCommandEditor.audioVideoMix(videoPath, tmpAACPath, output, videoVolume, musicVolume)
+                CommandBuilder.audioVideoMix(videoPath, tmpAACPath, output, videoVolume, musicVolume)
             ) { ret ->
                 FileUtils.deleteFile(tmpAACPath)
                 handler.post { onComplete(ret == 0 && FileUtils.fileExists(output), output) }

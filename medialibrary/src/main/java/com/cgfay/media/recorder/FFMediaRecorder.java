@@ -19,11 +19,33 @@ import java.util.concurrent.Executors;
  */
 public final class FFMediaRecorder {
 
+    private static final String TAG = "FFMediaRecorder";
+
     static {
-        System.loadLibrary("ffmpeg");
-        System.loadLibrary("soundtouch");
-        System.loadLibrary("yuv");
-        System.loadLibrary("ffrecorder");
+        try {
+            System.loadLibrary("ffmpeg");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library ffmpeg", e);
+            throw new RuntimeException("Failed to load native library: ffmpeg", e);
+        }
+        try {
+            System.loadLibrary("soundtouch");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library soundtouch", e);
+            throw new RuntimeException("Failed to load native library: soundtouch", e);
+        }
+        try {
+            System.loadLibrary("yuv");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library yuv", e);
+            throw new RuntimeException("Failed to load native library: yuv", e);
+        }
+        try {
+            System.loadLibrary("ffrecorder");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library ffrecorder", e);
+            throw new RuntimeException("Failed to load native library: ffrecorder", e);
+        }
     }
 
     // 初始化

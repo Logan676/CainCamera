@@ -1,5 +1,7 @@
 package com.cgfay.media;
 
+import android.util.Log;
+
 /**
  * SoundTouch库
  * @author CainHuang
@@ -7,8 +9,15 @@ package com.cgfay.media;
  */
 public class SoundTouch {
 
+    private static final String TAG = "SoundTouch";
+
     static {
-        System.loadLibrary("soundtouch");
+        try {
+            System.loadLibrary("soundtouch");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library soundtouch", e);
+            throw new RuntimeException("Failed to load native library: soundtouch", e);
+        }
     }
 
     // 初始化
