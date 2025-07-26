@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
 }
 
 val platformVersion = rootProject.extra["minSdkVersion"].toString()
@@ -74,9 +75,6 @@ android {
         compose = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = rootProject.extra["composeCompilerVersion"] as String
-    }
 }
 
 dependencies {
