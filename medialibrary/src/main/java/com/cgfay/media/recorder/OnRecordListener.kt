@@ -1,11 +1,10 @@
 package com.cgfay.media.recorder
 
-import androidx.compose.runtime.Stable
 
 /**
  * Internal listener used by MediaRecorder to report recording state.
  */
-@Stable
+internal interface OnRecordListener {
 internal interface OnRecordListener {
     /** Called when recording starts. */
     fun onRecordStart(type: MediaType)

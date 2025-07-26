@@ -11,7 +11,30 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 
 class MusicPlayer : Closeable {
-    private external fun native_init()
+
+    companion object {
+        private const val TAG = "MusicPlayer"
+
+        init {
+            NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "musicplayer"
+            )
+            native_init()
+        }
+
+        @JvmStatic
+        private external fun native_init()
+        @JvmStatic
+        private fun postEventFromNative(mediaplayerRef: Any, what: Int, arg1: Int, arg2: Int, obj: Any?) {
+            val mp = (mediaplayerRef as WeakReference<*>).get() as? MusicPlayer ?: return
+            mp.mEventHandler?.let { handler ->
+                val m = handler.obtainMessage(what, arg1, arg2, obj)
+                handler.sendMessage(m)
+            }
+        }
+    }
+
     private external fun native_setup(mediaplayer_this: Any)
     private external fun native_finalize()
     private external fun _release()
@@ -31,13 +54,11 @@ class MusicPlayer : Closeable {
 
     @AccessedByNative
     private var mNativeContext: Long = 0
-    private var mEventHandler: EventHandler? = null
+    private var mEventHandler: EventHandler?
 
     init {
-        NativeLibraryLoader.loadLibraries("ffmpeg", "musicplayer")
-        native_init()
         val looper = Looper.myLooper() ?: Looper.getMainLooper()
-        mEventHandler = looper?.let { EventHandler(this, it) }
+        mEventHandler = if (looper != null) EventHandler(this, looper) else null
         native_setup(WeakReference(this))
     }
 
@@ -59,20 +80,58 @@ class MusicPlayer : Closeable {
         _setDataSource(path)
     }
 
-    fun setSpeed(speed: Float) = _setSpeed(speed)
-    fun setLooping(looping: Boolean) = _setLooping(looping)
-    fun setRange(startMs: Float, endMs: Float) = _setRange(startMs, endMs)
-    fun setVolume(leftVolume: Float, rightVolume: Float) = _setVolume(leftVolume, rightVolume)
-    fun prepare() = _prepare()
-    fun start() = _start()
-    fun pause() = _pause()
-    fun stop() = _stop()
-    fun seekTo(timeMs: Float) = _seekTo(timeMs)
-    fun getDuration(): Float = _getDuration()
-    fun isLooping(): Boolean = _isLooping()
-    fun isPlaying(): Boolean = _isPlaying()
+    fun setSpeed(speed: Float) {
+        _setSpeed(speed)
+    }
 
-    private inner class EventHandler(private val mMusicPlayer: MusicPlayer, looper: Looper) : Handler(looper) {
+    fun setLooping(looping: Boolean) {
+        _setLooping(looping)
+    }
+
+    fun setRange(startMs: Float, endMs: Float) {
+        _setRange(startMs, endMs)
+    }
+
+    fun setVolume(leftVolume: Float, rightVolume: Float) {
+        _setVolume(leftVolume, rightVolume)
+    }
+
+    @Throws(IllegalStateException::class)
+    fun prepare() {
+        _prepare()
+    }
+
+    @Throws(IllegalStateException::class)
+    fun start() {
+        _start()
+    }
+
+    @Throws(IllegalStateException::class)
+    fun pause() {
+        _pause()
+    }
+
+    @Throws(IllegalStateException::class)
+    fun stop() {
+        _stop()
+    }
+
+    @Throws(IllegalStateException::class)
+    fun seekTo(timeMs: Float) {
+        _seekTo(timeMs)
+    }
+
+    val duration: Float
+        get() = _getDuration()
+
+    val isLooping: Boolean
+        get() = _isLooping()
+
+    val isPlaying: Boolean
+        get() = _isPlaying()
+
+    private inner class EventHandler(mp: MusicPlayer, looper: Looper) : Handler(looper) {
+        private val mMusicPlayer: MusicPlayer = mp
         override fun handleMessage(msg: Message) {
             if (mMusicPlayer.mNativeContext == 0L) {
                 Log.w(TAG, "musicplayer went away with unhandled events")
@@ -84,54 +143,44 @@ class MusicPlayer : Closeable {
                 MEDIA_STARTED -> Log.d(TAG, "music player is started!")
                 MEDIA_SEEK_COMPLETE -> mOnSeekCompleteListener?.onSeekComplete(mMusicPlayer)
                 MEDIA_ERROR -> {
-                    Log.e(TAG, "Error(" + msg.arg1 + "," + msg.arg2 + ")")
-                    val handled = mOnErrorListener?.onError(mMusicPlayer, msg.arg1, msg.arg2) ?: false
-                    if (!handled) mOnCompletionListener?.onCompletion(mMusicPlayer)
+                    Log.e(TAG, "Error (" + msg.arg1 + "," + msg.arg2 + ")")
+                    val errorWasHandled = mOnErrorListener?.onError(mMusicPlayer, msg.arg1, msg.arg2) ?: false
+                    if (!errorWasHandled) {
+                        mOnCompletionListener?.onCompletion(mMusicPlayer)
+                    }
                 }
+                MEDIA_INFO -> {}
                 MEDIA_CURRENT -> mOnCurrentPositionListener?.onCurrentPosition(mMusicPlayer, msg.arg1.toFloat(), msg.arg2.toFloat())
+                else -> Log.e(TAG, "Unknown message type " + msg.what)
             }
         }
     }
 
-    private fun postEventFromNative(what: Int, arg1: Int, arg2: Int, obj: Any?) {
-        mEventHandler?.let {
-            val m = it.obtainMessage(what, arg1, arg2, obj)
-            it.sendMessage(m)
-        }
-    }
-
     interface OnPreparedListener { fun onPrepared(mp: MusicPlayer) }
-    fun setOnPreparedListener(listener: OnPreparedListener?) { mOnPreparedListener = listener }
-    private var mOnPreparedListener: OnPreparedListener? = null
-
     interface OnCompletionListener { fun onCompletion(mp: MusicPlayer) }
-    fun setOnCompletionListener(listener: OnCompletionListener?) { mOnCompletionListener = listener }
-    private var mOnCompletionListener: OnCompletionListener? = null
-
     interface OnSeekCompleteListener { fun onSeekComplete(mp: MusicPlayer) }
-    fun setOnSeekCompleteListener(listener: OnSeekCompleteListener?) { mOnSeekCompleteListener = listener }
-    private var mOnSeekCompleteListener: OnSeekCompleteListener? = null
-
     interface OnErrorListener { fun onError(mp: MusicPlayer, what: Int, extra: Int): Boolean }
-    fun setOnErrorListener(listener: OnErrorListener?) { mOnErrorListener = listener }
-    private var mOnErrorListener: OnErrorListener? = null
-
     interface OnCurrentPositionListener { fun onCurrentPosition(mp: MusicPlayer, current: Float, duration: Float) }
+
+    fun setOnPreparedListener(listener: OnPreparedListener?) { mOnPreparedListener = listener }
+    fun setOnCompletionListener(listener: OnCompletionListener?) { mOnCompletionListener = listener }
+    fun setOnSeekCompleteListener(listener: OnSeekCompleteListener?) { mOnSeekCompleteListener = listener }
+    fun setOnErrorListener(listener: OnErrorListener?) { mOnErrorListener = listener }
     fun setOnCurrentPositionListener(listener: OnCurrentPositionListener?) { mOnCurrentPositionListener = listener }
+
+    private var mOnPreparedListener: OnPreparedListener? = null
+    private var mOnCompletionListener: OnCompletionListener? = null
+    private var mOnSeekCompleteListener: OnSeekCompleteListener? = null
+    private var mOnErrorListener: OnErrorListener? = null
     private var mOnCurrentPositionListener: OnCurrentPositionListener? = null
 
-    companion object {
-        private const val TAG = "MusicPlayer"
-        private const val MEDIA_PREPARED = 1
-        private const val MEDIA_STARTED = 2
-        private const val MEDIA_PLAYBACK_COMPLETE = 3
-        private const val MEDIA_SEEK_COMPLETE = 4
-        private const val MEDIA_ERROR = 100
-        private const val MEDIA_INFO = 200
-        private const val MEDIA_CURRENT = 300
-
-        const val MEDIA_ERROR_UNKNOWN = 1
-        const val MEDIA_ERROR_SERVER_DIED = 100
-        const val MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK = 200
+    private companion object {
+        const val MEDIA_PREPARED = 1
+        const val MEDIA_STARTED = 2
+        const val MEDIA_PLAYBACK_COMPLETE = 3
+        const val MEDIA_SEEK_COMPLETE = 4
+        const val MEDIA_ERROR = 100
+        const val MEDIA_INFO = 200
+        const val MEDIA_CURRENT = 300
     }
 }
