@@ -7,7 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import org.junit.Rule
 import org.junit.Test
 
-class ExampleComposeTest {
+class ExampleInstrumentedTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
