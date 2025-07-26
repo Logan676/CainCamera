@@ -77,6 +77,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = rootProject.extra["composeVersion"] as String
+    }
 }
 
 dependencies {
@@ -90,6 +97,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:${rootProject.extra["composeVersion"]}")
     implementation("androidx.compose.material:material:${rootProject.extra["composeVersion"]}")
     implementation("androidx.compose.ui:ui-tooling-preview:${rootProject.extra["composeVersion"]}")
+    implementation("androidx.compose.runtime:runtime:${rootProject.extra["composeVersion"]}")
     debugImplementation("androidx.compose.ui:ui-tooling:${rootProject.extra["composeVersion"]}")
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
