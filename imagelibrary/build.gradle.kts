@@ -10,7 +10,6 @@ android {
 
     defaultConfig {
         minSdk = rootProject.extra["minSdkVersion"] as Int
-        targetSdk = rootProject.extra["targetSdkVersion"] as Int
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -30,13 +29,21 @@ android {
         kotlinCompilerExtensionVersion = rootProject.extra["composeVersion"] as String
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        }
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    testOptions {
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
+    }
+    lint {
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
     }
 }
 

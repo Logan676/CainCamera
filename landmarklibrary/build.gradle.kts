@@ -9,7 +9,6 @@ android {
 
     defaultConfig {
         minSdk = project.rootProject.extra["minSdkVersion"] as Int
-        targetSdk = project.rootProject.extra["targetSdkVersion"] as Int
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -24,6 +23,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    testOptions {
+        targetSdk = project.rootProject.extra["targetSdkVersion"] as Int
+    }
+    lint {
+        targetSdk = project.rootProject.extra["targetSdkVersion"] as Int
     }
 }
 
