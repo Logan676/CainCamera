@@ -12,6 +12,8 @@ import java.io.Serializable;
  * </pre>
  *
  * @author badlogicgames@gmail.com */
+import android.util.Log;
+
 public class Matrix4 implements Serializable {
     private static final long serialVersionUID = -2717655254359579617L;
     /** XX: Typically the unrotated X component for scaling, also the cosine of the angle when rotated on the Y and/or Z axis. On
@@ -1551,7 +1553,14 @@ public class Matrix4 implements Serializable {
                 && MathUtils.isZero(val[M20]) && MathUtils.isZero(val[M21]));
     }
 
+    private static final String TAG = "Matrix4";
+
     static {
-        System.loadLibrary("nativegdx");
+        try {
+            System.loadLibrary("nativegdx");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library nativegdx", e);
+            throw new RuntimeException("Failed to load native library: nativegdx", e);
+        }
     }
 }

@@ -63,15 +63,35 @@ public class CainMediaPlayer implements IMediaPlayer {
      */
     public static final boolean BYPASS_METADATA_FILTER = false;
 
+    private static final String TAG = "CainMediaPlayer";
+
     static {
-        System.loadLibrary("ffmpeg");
-        System.loadLibrary("soundtouch");
-        System.loadLibrary("yuv");
-        System.loadLibrary("media_player");
+        try {
+            System.loadLibrary("ffmpeg");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library ffmpeg", e);
+            throw new RuntimeException("Failed to load native library: ffmpeg", e);
+        }
+        try {
+            System.loadLibrary("soundtouch");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library soundtouch", e);
+            throw new RuntimeException("Failed to load native library: soundtouch", e);
+        }
+        try {
+            System.loadLibrary("yuv");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library yuv", e);
+            throw new RuntimeException("Failed to load native library: yuv", e);
+        }
+        try {
+            System.loadLibrary("media_player");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library media_player", e);
+            throw new RuntimeException("Failed to load native library: media_player", e);
+        }
         native_init();
     }
-
-    private static final String TAG = "CainMediaPlayer";
 
     @AccessedByNative
     private long mNativeContext;

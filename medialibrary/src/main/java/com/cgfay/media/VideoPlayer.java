@@ -31,9 +31,24 @@ public class VideoPlayer implements IMediaPlayer {
     private static final String TAG = "VideoPlayer";
 
     static {
-        System.loadLibrary("ffmpeg");
-        System.loadLibrary("yuv");
-        System.loadLibrary("videoplayer");
+        try {
+            System.loadLibrary("ffmpeg");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library ffmpeg", e);
+            throw new RuntimeException("Failed to load native library: ffmpeg", e);
+        }
+        try {
+            System.loadLibrary("yuv");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library yuv", e);
+            throw new RuntimeException("Failed to load native library: yuv", e);
+        }
+        try {
+            System.loadLibrary("videoplayer");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library videoplayer", e);
+            throw new RuntimeException("Failed to load native library: videoplayer", e);
+        }
         native_init();
     }
 
