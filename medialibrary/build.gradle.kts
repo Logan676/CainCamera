@@ -1,7 +1,9 @@
+val kotlinVersion: String by rootProject.extra
+
 plugins {
     id("com.android.library")
     id("kotlin-android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    id("org.jetbrains.kotlin.plugin.compose") version kotlinVersion
 }
 
 val platformVersion = rootProject.extra["minSdkVersion"].toString()
