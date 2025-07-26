@@ -19,7 +19,8 @@ extra.apply {
     set("rxJavaVersion", "2.2.21")
     set("rxAndroidVersion", "2.1.1")
     set("composeCompilerVersion", "1.5.4")
-    set("kotlinVersion", "2.2.0")
+    // Updated for Kotlin 2.0
+    set("kotlinVersion", "2.0.0")
     set("composeVersion", "1.6.0")
     set("activityComposeVersion", "1.9.0")
     set("navigationComposeVersion", "2.7.7")
