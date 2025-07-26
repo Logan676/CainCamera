@@ -54,6 +54,18 @@ android {
         }
     }
 
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = rootProject.extra["composeVersion"] as String
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
     packagingOptions {
         pickFirst("lib/arm64-v8a/libyuv.so")
         pickFirst("lib/armeabi-v7a/libyuv.so")
@@ -74,6 +86,12 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlinVersion"]}")
     implementation("androidx.appcompat:appcompat:${rootProject.extra["appcompatVersion"]}")
     implementation("androidx.constraintlayout:constraintlayout:${rootProject.extra["constraintLayoutVersion"]}")
+    implementation("androidx.activity:activity-compose:${rootProject.extra["activityComposeVersion"]}")
+    implementation("androidx.compose.ui:ui:${rootProject.extra["composeVersion"]}")
+    implementation("androidx.compose.foundation:foundation:${rootProject.extra["composeVersion"]}")
+    implementation("androidx.compose.material:material:${rootProject.extra["composeVersion"]}")
+    implementation("androidx.compose.ui:ui-tooling-preview:${rootProject.extra["composeVersion"]}")
+    debugImplementation("androidx.compose.ui:ui-tooling:${rootProject.extra["composeVersion"]}")
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
     androidTestImplementation("androidx.test.espresso:espresso-core:${rootProject.extra["espressoVersion"]}")
