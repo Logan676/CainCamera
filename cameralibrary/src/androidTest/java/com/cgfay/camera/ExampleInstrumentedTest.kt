@@ -1,4 +1,4 @@
-package com.badlogic.gdx
+package com.cgfay.camera
 
 import androidx.compose.material.Text
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -7,7 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import org.junit.Rule
 import org.junit.Test
 
-class ExampleComposeTest {
+class ExampleInstrumentedTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 

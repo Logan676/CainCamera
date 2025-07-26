@@ -10,7 +10,7 @@ import org.junit.Rule
 import org.junit.Test
 import androidx.compose.runtime.Composable
 
-class ExampleComposeTest {
+class ExampleInstrumentedTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
