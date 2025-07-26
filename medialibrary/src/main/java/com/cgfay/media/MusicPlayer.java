@@ -9,10 +9,11 @@ import androidx.annotation.NonNull;
 
 import com.cgfay.media.annotations.AccessedByNative;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-public class MusicPlayer {
+public class MusicPlayer implements Closeable {
 
     private static final String TAG = "MusicPlayer";
 
@@ -82,6 +83,11 @@ public class MusicPlayer {
         mOnErrorListener = null;
         mOnCurrentPositionListener = null;
         _release();
+    }
+
+    @Override
+    public void close() {
+        release();
     }
 
     /**
@@ -187,11 +193,6 @@ public class MusicPlayer {
         return _isPlaying();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        native_finalize();
-        super.finalize();
-    }
 
     /* Do not change these values without updating their counterparts
      * in MusicPlayer.h!

@@ -5,7 +5,9 @@ package com.cgfay.media;
  * @author CainHuang
  * @date 2019/6/30
  */
-public class SoundTouch {
+import java.io.Closeable;
+
+public class SoundTouch implements Closeable {
 
     static {
         System.loadLibrary("soundtouch");
@@ -94,16 +96,10 @@ public class SoundTouch {
         return receiveSamples(handle, output, output.length);
     }
 
+    @Override
     public void close() {
         nativeRelease(handle);
         handle = 0;
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        if (handle != 0) {
-            close();
-        }
-        super.finalize();
-    }
 }

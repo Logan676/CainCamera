@@ -3,11 +3,12 @@ package com.cgfay.media;
 import androidx.annotation.NonNull;
 
 import com.cgfay.uitls.utils.FileUtils;
+import java.io.Closeable;
 
 /**
  * 媒体编辑器
  */
-public class CainMediaEditor {
+public class CainMediaEditor implements Closeable {
 
     private static final String TAG = "CainMediaEditor";
 
@@ -35,11 +36,6 @@ public class CainMediaEditor {
         handle = nativeInit();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        release();
-        super.finalize();
-    }
 
     /**
      * 释放资源
@@ -49,6 +45,11 @@ public class CainMediaEditor {
             nativeRelease(handle);
             handle = 0;
         }
+    }
+
+    @Override
+    public void close() {
+        release();
     }
 
     /**
