@@ -1,4 +1,4 @@
-package com.cgfay.camera.fragment
+package com.cgfay.camera.selector
 
 import android.content.Context
 import android.content.Intent

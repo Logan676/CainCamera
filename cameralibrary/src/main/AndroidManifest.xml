@@ -10,7 +10,7 @@
         <activity android:name="com.cgfay.camera.activity.CameraSettingActivity" />
         <activity android:name="com.cgfay.camera.activity.WatermarkActivity"/>
         <activity
-            android:name="com.cgfay.camera.compose.CameraComposeActivity"
+            android:name="com.cgfay.camera.activity.CameraComposeActivity"
             android:theme="@style/NoActionBarTheme"/>
     </application>
 

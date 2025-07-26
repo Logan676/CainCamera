@@ -1,4 +1,4 @@
-package com.cgfay.camera.compose
+package com.cgfay.camera.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

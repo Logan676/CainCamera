@@ -1,4 +1,4 @@
-package com.cgfay.camera.compose
+package com.cgfay.camera.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -19,9 +19,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cgfay.cameralibrary.R
 import com.cgfay.filter.glfilter.color.bean.DynamicColor
 import com.cgfay.filter.glfilter.makeup.bean.DynamicMakeup
-import com.cgfay.camera.compose.PreviewResourceScreen
-import com.cgfay.camera.compose.PreviewEffectScreen
-import com.cgfay.camera.compose.PreviewSettingScreen
+import com.cgfay.camera.viewmodel.CameraPreviewViewModel
+import com.cgfay.camera.ui.PreviewResourceScreen
+import com.cgfay.camera.ui.PreviewEffectScreen
+import com.cgfay.camera.ui.PreviewSettingScreen
 
 @Composable
 fun CameraPreviewScreen(viewModel: CameraPreviewViewModel = viewModel()) {
