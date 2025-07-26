@@ -17,8 +17,18 @@ public class MusicPlayer {
     private static final String TAG = "MusicPlayer";
 
     static {
-        System.loadLibrary("ffmpeg");
-        System.loadLibrary("musicplayer");
+        try {
+            System.loadLibrary("ffmpeg");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library ffmpeg", e);
+            throw new RuntimeException("Failed to load native library: ffmpeg", e);
+        }
+        try {
+            System.loadLibrary("musicplayer");
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(TAG, "Failed to load native library musicplayer", e);
+            throw new RuntimeException("Failed to load native library: musicplayer", e);
+        }
         native_init();
     }
 
