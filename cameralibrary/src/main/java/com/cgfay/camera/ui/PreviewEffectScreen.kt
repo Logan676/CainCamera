@@ -4,9 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import com.cgfay.camera.adapter.BeautyList
-import com.cgfay.camera.adapter.FilterGrid
-import com.cgfay.camera.adapter.MakeupList
+import com.cgfay.camera.widget.BeautyList
+import com.cgfay.camera.widget.FilterGrid
+import com.cgfay.camera.widget.MakeupList
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Slider
