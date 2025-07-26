@@ -5,8 +5,6 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import java.nio.ByteBuffer
 
 class AudioEncoder(
@@ -124,13 +122,4 @@ class AudioEncoder(
     fun getDuration(): Long = presentationTimeUs
 }
 
-@Composable
-fun rememberAudioEncoder(
-    bitrate: Int,
-    sampleRate: Int,
-    channelCount: Int,
-    outputPath: String
-): AudioEncoder = remember(bitrate, sampleRate, channelCount, outputPath) {
-    AudioEncoder(bitrate, sampleRate, channelCount).apply { setOutputPath(outputPath) }
-}
 
