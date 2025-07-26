@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 import com.cgfay.media.annotations.AccessedByNative;
 import com.cgfay.uitls.utils.BitmapUtils;
@@ -27,18 +28,10 @@ public class CainMediaMetadataRetriever {
     private static final String TAG = "CainMediaMetadataRetriever";
 
     static {
-        try {
-            System.loadLibrary("ffmpeg");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffmpeg", e);
-            throw new RuntimeException("Failed to load native library: ffmpeg", e);
-        }
-        try {
-            System.loadLibrary("metadata_retriever");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library metadata_retriever", e);
-            throw new RuntimeException("Failed to load native library: metadata_retriever", e);
-        }
+        NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "metadata_retriever"
+        );
         native_init();
     }
 

@@ -1,6 +1,7 @@
 package com.cgfay.media;
 
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 /**
  * SoundTouch库
@@ -14,12 +15,7 @@ public class SoundTouch implements Closeable {
     private static final String TAG = "SoundTouch";
 
     static {
-        try {
-            System.loadLibrary("soundtouch");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library soundtouch", e);
-            throw new RuntimeException("Failed to load native library: soundtouch", e);
-        }
+        NativeLibraryLoader.loadLibraries("soundtouch");
     }
 
     // 初始化

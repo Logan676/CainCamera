@@ -1,6 +1,7 @@
 package com.cgfay.media.recorder
 
 import android.util.Log
+import com.cgfay.uitls.utils.NativeLibraryLoader
 
 /**
  * Kotlin version of FFMediaRecorder that uses native ffmpeg based recorder.
@@ -14,30 +15,12 @@ class FFMediaRecorder private constructor() : AutoCloseable {
         private const val TAG = "FFMediaRecorder"
 
         init {
-            try {
-                System.loadLibrary("ffmpeg")
-            } catch (e: UnsatisfiedLinkError) {
-                Log.e(TAG, "Failed to load native library ffmpeg", e)
-                throw RuntimeException("Failed to load native library: ffmpeg", e)
-            }
-            try {
-                System.loadLibrary("soundtouch")
-            } catch (e: UnsatisfiedLinkError) {
-                Log.e(TAG, "Failed to load native library soundtouch", e)
-                throw RuntimeException("Failed to load native library: soundtouch", e)
-            }
-            try {
-                System.loadLibrary("yuv")
-            } catch (e: UnsatisfiedLinkError) {
-                Log.e(TAG, "Failed to load native library yuv", e)
-                throw RuntimeException("Failed to load native library: yuv", e)
-            }
-            try {
-                System.loadLibrary("ffrecorder")
-            } catch (e: UnsatisfiedLinkError) {
-                Log.e(TAG, "Failed to load native library ffrecorder", e)
-                throw RuntimeException("Failed to load native library: ffrecorder", e)
-            }
+            NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "soundtouch",
+                "yuv",
+                "ffrecorder"
+            )
         }
     }
 

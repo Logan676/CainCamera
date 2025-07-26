@@ -3,6 +3,7 @@ package com.cgfay.media;
 import androidx.annotation.NonNull;
 
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 import com.cgfay.uitls.utils.FileUtils;
 
@@ -16,30 +17,12 @@ public class CainMediaEditor implements Closeable {
     private static final String TAG = "CainMediaEditor";
 
     static {
-        try {
-            System.loadLibrary("ffmpeg");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffmpeg", e);
-            throw new RuntimeException("Failed to load native library: ffmpeg", e);
-        }
-        try {
-            System.loadLibrary("soundtouch");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library soundtouch", e);
-            throw new RuntimeException("Failed to load native library: soundtouch", e);
-        }
-        try {
-            System.loadLibrary("yuv");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library yuv", e);
-            throw new RuntimeException("Failed to load native library: yuv", e);
-        }
-        try {
-            System.loadLibrary("media_editor");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library media_editor", e);
-            throw new RuntimeException("Failed to load native library: media_editor", e);
-        }
+        NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "soundtouch",
+                "yuv",
+                "media_editor"
+        );
     }
 
     // 初始化

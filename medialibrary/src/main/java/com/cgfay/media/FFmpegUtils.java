@@ -1,6 +1,7 @@
 package com.cgfay.media;
 
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 /**
  * @author CainHuang
@@ -11,18 +12,10 @@ public final class FFmpegUtils {
     private static final String TAG = "FFmpegUtils";
 
     static {
-        try {
-            System.loadLibrary("ffmpeg");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffmpeg", e);
-            throw new RuntimeException("Failed to load native library: ffmpeg", e);
-        }
-        try {
-            System.loadLibrary("ffcommand");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffcommand", e);
-            throw new RuntimeException("Failed to load native library: ffcommand", e);
-        }
+        NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "ffcommand"
+        );
     }
 
     private FFmpegUtils() {}
