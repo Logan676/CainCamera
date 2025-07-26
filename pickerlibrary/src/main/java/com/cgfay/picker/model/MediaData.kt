@@ -10,91 +10,35 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.provider.MediaStore
-import android.text.TextUtils
-import android.util.Log
+import androidx.compose.runtime.Stable
+import com.cgfay.picker.model.MimeType.Companion.isImage
+import com.cgfay.picker.model.MimeType.Companion.isVideo
 
 /**
- * 媒体数据对象
+ * Data class representing a media item from the device gallery.
  */
-class MediaData : Parcelable {
+@Stable
+data class MediaData(
+    val id: Long,
+    val mimeType: String,
+    val contentUri: Uri,
+    val size: Long,
+    var durationMs: Long = 0L,
+    var width: Int = 0,
+    var height: Int = 0,
+    var orientation: Int = 0
+) : Parcelable {
 
-    var id: Long
-    var mimeType: String
-    var contentUri: Uri
-    var size: Long
-    var durationMs: Long
-    var width: Int
-    var height: Int
-    var orientation: Int
+    fun isImage(): Boolean = MimeType.isImage(mimeType)
 
-    @Throws(Exception::class)
-    constructor(context: Context, cursor: Cursor) {
-        id = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)).toLong()
-        mimeType = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
-        width = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.WIDTH))
-        height = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.HEIGHT))
-        size = cursor.getLong(cursor.getColumnIndex(MediaStore.MediaColumns.SIZE))
-        val uri = when {
-            isImage() -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            isVideo() -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            else -> MediaStore.Files.getContentUri(EXTERNAL)
-        }
-        contentUri = ContentUris.withAppendedId(uri, id)
-        if (isVideo()) {
-            val durationId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION)
-            } else {
-                cursor.getColumnIndexOrThrow(KEY_DURATION)
-            }
-            durationMs = cursor.getLong(durationId)
-            if (durationMs == 0L) {
-                extractVideoMetadata(context)
-            }
-        } else {
-            durationMs = 0
-        }
-        orientation = 0
-        Log.d(TAG, "MediaData: $this")
-    }
+    fun isVideo(): Boolean = MimeType.isVideo(mimeType)
 
-    private constructor(parcel: Parcel) {
-        id = parcel.readLong()
-        mimeType = parcel.readString() ?: ""
-        contentUri = parcel.readParcelable(Uri::class.java.classLoader) ?: Uri.EMPTY
-        size = parcel.readLong()
-        durationMs = parcel.readLong()
-        width = parcel.readInt()
-        height = parcel.readInt()
-        orientation = parcel.readInt()
-    }
-
-    private fun extractVideoMetadata(context: Context) {
-        val extractor = MediaExtractor()
-        try {
-            extractor.setDataSource(context, contentUri, null)
-            for (i in 0 until extractor.trackCount) {
-                val format = extractor.getTrackFormat(i)
-                if (format.containsKey(MediaFormat.KEY_MIME)) {
-                    val mime = format.getString(MediaFormat.KEY_MIME)
-                    if (!TextUtils.isEmpty(mime) && mime!!.startsWith("video/")) {
-                        durationMs = format.getLong(MediaFormat.KEY_DURATION) / KILO
-                        if (width == 0 || height == 0) {
-                            width = format.getInteger(MediaFormat.KEY_WIDTH)
-                            height = format.getInteger(MediaFormat.KEY_HEIGHT)
-                        }
-                        break
-                    }
-                }
-            }
-        } finally {
-            extractor.release()
-        }
-    }
+    fun isGif(): Boolean = mimeType == MimeType.GIF.mimeType
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeLong(id)
         dest.writeString(mimeType)
-        dest.writeParcelable(contentUri, 0)
+        dest.writeParcelable(contentUri, flags)
         dest.writeLong(size)
         dest.writeLong(durationMs)
         dest.writeInt(width)
@@ -104,52 +48,21 @@ class MediaData : Parcelable {
 
     override fun describeContents(): Int = 0
 
-    fun isImage(): Boolean {
-        if (TextUtils.isEmpty(mimeType)) return false
-        return mimeType == MimeType.JPEG.mimeType || mimeType == MimeType.JPG.mimeType ||
-                mimeType == MimeType.BMP.mimeType || mimeType == MimeType.PNG.mimeType
-    }
-
-    fun isVideo(): Boolean {
-        if (TextUtils.isEmpty(mimeType)) return false
-        return mimeType == MimeType.MPEG.mimeType || mimeType == MimeType.MP4.mimeType ||
-                mimeType == MimeType.GPP.mimeType || mimeType == MimeType.MKV.mimeType ||
-                mimeType == MimeType.AVI.mimeType
-    }
-
-    fun isGif(): Boolean {
-        if (TextUtils.isEmpty(mimeType)) return false
-        return mimeType == MimeType.GIF.mimeType
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is MediaData) return false
-        return mimeType == other.mimeType &&
-                contentUri == other.contentUri &&
-                size == other.size &&
-                durationMs == other.durationMs &&
-                width == other.width &&
-                height == other.height
-    }
-
-    override fun hashCode(): Int {
-        var result = 1
-        result = DEFAULT_HASHCODE * result + id.hashCode()
-        result = DEFAULT_HASHCODE * result + mimeType.hashCode()
-        result = DEFAULT_HASHCODE * result + contentUri.hashCode()
-        result = DEFAULT_HASHCODE * result + size.hashCode()
-        result = DEFAULT_HASHCODE * result + durationMs.hashCode()
-        result = DEFAULT_HASHCODE * result + width.hashCode()
-        result = DEFAULT_HASHCODE * result + height.hashCode()
-        return result
-    }
+    private constructor(source: Parcel) : this(
+        id = source.readLong(),
+        mimeType = source.readString() ?: "",
+        contentUri = source.readParcelable(Uri::class.java.classLoader) ?: Uri.EMPTY,
+        size = source.readLong(),
+        durationMs = source.readLong(),
+        width = source.readInt(),
+        height = source.readInt(),
+        orientation = source.readInt()
+    )
 
     companion object {
-        private const val TAG = "MediaData"
         private const val EXTERNAL = "external"
         private const val KEY_DURATION = "duration"
-        private const val KILO = 1000
-        private const val DEFAULT_HASHCODE = 31
+        private const val KILO = 1000L
 
         @JvmField
         val CREATOR: Parcelable.Creator<MediaData> = object : Parcelable.Creator<MediaData> {
@@ -157,14 +70,56 @@ class MediaData : Parcelable {
             override fun newArray(size: Int): Array<MediaData?> = arrayOfNulls(size)
         }
 
+        /**
+         * Create [MediaData] from a cursor row.
+         */
         @JvmStatic
-        fun valueOf(context: Context, cursor: Cursor): MediaData? {
-            var mediaData: MediaData? = null
-            try {
-                mediaData = MediaData(context, cursor)
-            } catch (_: Exception) {
+        fun fromCursor(context: Context, cursor: Cursor): MediaData? = try {
+            val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))
+            val mime = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE))
+            var width = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.WIDTH))
+            var height = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.HEIGHT))
+            val size = cursor.getLong(cursor.getColumnIndex(MediaStore.MediaColumns.SIZE))
+            val base = when {
+                isImage(mime) -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                isVideo(mime) -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                else -> MediaStore.Files.getContentUri(EXTERNAL)
             }
-            return mediaData
+            val uri = ContentUris.withAppendedId(base, id)
+            var duration = 0L
+            if (isVideo(mime)) {
+                val durationId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION)
+                } else {
+                    cursor.getColumnIndexOrThrow(KEY_DURATION)
+                }
+                duration = cursor.getLong(durationId)
+                if (duration == 0L) {
+                    val extractor = MediaExtractor()
+                    try {
+                        extractor.setDataSource(context, uri, null)
+                        for (i in 0 until extractor.trackCount) {
+                            val format = extractor.getTrackFormat(i)
+                            if (format.containsKey(MediaFormat.KEY_MIME)) {
+                                val formatMime = format.getString(MediaFormat.KEY_MIME)
+                                if (!formatMime.isNullOrEmpty() && formatMime.startsWith("video/")) {
+                                    duration = format.getLong(MediaFormat.KEY_DURATION) / KILO
+                                    if (width == 0 || height == 0) {
+                                        width = format.getInteger(MediaFormat.KEY_WIDTH)
+                                        height = format.getInteger(MediaFormat.KEY_HEIGHT)
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    } finally {
+                        extractor.release()
+                    }
+                }
+            }
+            MediaData(id, mime, uri, size, duration, width, height, 0)
+        } catch (e: Exception) {
+            null
         }
     }
 }
