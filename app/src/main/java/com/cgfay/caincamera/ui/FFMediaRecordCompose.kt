@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
@@ -112,6 +113,7 @@ fun FFMediaRecordScreen(onFinish: () -> Unit) {
                 .size(120.dp)
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 40.dp)
+                .testTag("record_button")
         )
         if (uiState.showViews && viewModel.recordVideoSize > 0) {
             Button(

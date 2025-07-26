@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -114,7 +115,10 @@ private fun MusicPlayerContent(
             Text(text = "speed", modifier = Modifier.padding(end = 8.dp))
             Slider(value = speedProgress, onValueChange = onSpeedChange)
         }
-        Button(onClick = onPlayPause, modifier = Modifier.padding(top = 16.dp)) {
+        Button(
+            onClick = onPlayPause,
+            modifier = Modifier.padding(top = 16.dp).testTag("play_pause_button")
+        ) {
             Text(if (isPlaying) "pause" else "play")
         }
         Text(text = path, modifier = Modifier.padding(top = 16.dp))
