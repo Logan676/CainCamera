@@ -16,7 +16,8 @@ import com.cgfay.camera.camera.ICameraController
 import com.cgfay.camera.camera.OnFrameAvailableListener
 import com.cgfay.camera.camera.OnSurfaceTextureListener
 import com.cgfay.camera.utils.PathConstraints
-import com.cgfay.media.CainCommandEditor
+import com.cgfay.media.command.CommandBuilder
+import com.cgfay.media.command.CommandExecutor
 import com.cgfay.media.recorder.AudioParams
 import com.cgfay.media.recorder.HWMediaRecorder
 import com.cgfay.media.recorder.MediaInfo
@@ -57,7 +58,7 @@ class RecordViewModel(private val activity: BaseRecordActivity) : ViewModel(),
     private val videoList = mutableListOf<MediaInfo>()
     private var audioInfo: RecordInfo? = null
     private var videoInfo: RecordInfo? = null
-    private val commandEditor = CainCommandEditor()
+    private val commandExecutor = CommandExecutor()
 
     private val cameraController: ICameraController = if (CameraApi.hasCamera2(activity)) {
         CameraXController(activity)
@@ -78,7 +79,7 @@ class RecordViewModel(private val activity: BaseRecordActivity) : ViewModel(),
 
     fun release() {
         hwMediaRecorder.release()
-        commandEditor.release()
+        commandExecutor.release()
     }
 
     fun setSpeedMode(mode: SpeedMode) {
@@ -130,10 +131,10 @@ class RecordViewModel(private val activity: BaseRecordActivity) : ViewModel(),
         }
         if (hwMediaRecorder.enableAudio()) {
             val currentFile = generateOutputPath()
-            FileUtils.createFile(currentFile)
-            commandEditor.execCommand(
-                CainCommandEditor.mergeAudioVideo(videoInfo!!.fileName, audioInfo!!.fileName, currentFile)
-            ) { result ->
+        FileUtils.createFile(currentFile)
+        commandExecutor.execCommand(
+            CommandBuilder.mergeAudioVideo(videoInfo!!.fileName, audioInfo!!.fileName, currentFile)
+        ) { result ->
                 if (result == 0) {
                     videoList.add(MediaInfo(currentFile, videoInfo!!.duration))
                     remainDuration -= videoInfo!!.duration
@@ -236,7 +237,7 @@ class RecordViewModel(private val activity: BaseRecordActivity) : ViewModel(),
             _uiState.value = _uiState.value.copy(showDialog = true)
             val videos = videoList.mapNotNull { it.fileName }
             val finalPath = generateOutputPath()
-            commandEditor.execCommand(CainCommandEditor.concatVideo(activity, videos, finalPath)) { result ->
+            commandExecutor.execCommand(CommandBuilder.concatVideo(activity, videos, finalPath)) { result ->
                 _uiState.value = _uiState.value.copy(showDialog = false)
                 if (result == 0) {
                     val intent = Intent(activity, VideoEditActivity::class.java)
