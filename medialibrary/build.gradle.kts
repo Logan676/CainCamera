@@ -111,6 +111,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:${rootProject.extra["composeVersion"]}")
     implementation("androidx.compose.runtime:runtime:${rootProject.extra["composeVersion"]}")
     implementation("androidx.compose.foundation:foundation:${rootProject.extra["composeVersion"]}")
+    implementation("androidx.compose.runtime:runtime:$composeVersion")
     debugImplementation("androidx.compose.ui:ui-tooling:${rootProject.extra["composeVersion"]}")
     testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
     androidTestImplementation("androidx.test.ext:junit:${rootProject.extra["androidXJunitVersion"]}")
