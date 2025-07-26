@@ -17,7 +17,8 @@ import com.cgfay.camera.camera.OnFrameAvailableListener
 import com.cgfay.camera.camera.OnSurfaceTextureListener
 import com.cgfay.camera.camera.PreviewCallback
 import com.cgfay.camera.utils.PathConstraints
-import com.cgfay.media.CainCommandEditor
+import com.cgfay.media.command.CommandBuilder
+import com.cgfay.media.command.CommandExecutor
 import com.cgfay.media.recorder.AVFormatter
 import com.cgfay.media.recorder.FFAudioRecorder
 import com.cgfay.media.recorder.FFMediaRecorder
@@ -36,7 +37,7 @@ class FFMediaRecordViewModel(
     private val _uiState = MutableStateFlow(RecordUiState())
     val uiState: StateFlow<RecordUiState> = _uiState.asStateFlow()
 
-    private val commandEditor = CainCommandEditor()
+    private val commandExecutor = CommandExecutor()
     private var maxDuration = 15_000
     private var remainDuration = maxDuration
 
@@ -68,7 +69,7 @@ class FFMediaRecordViewModel(
 
     fun onPause() { closeCamera() }
 
-    fun release() { commandEditor.release() }
+    fun release() { commandExecutor.release() }
 
     fun switchCamera() { cameraController.switchCamera() }
 
@@ -212,7 +213,7 @@ class FFMediaRecordViewModel(
             _uiState.value = _uiState.value.copy(showDialog = true)
             val videos = videoList.mapNotNull { it.fileName }
             val finalPath = generateOutputPath()
-            commandEditor.execCommand(CainCommandEditor.concatVideo(activity, videos, finalPath)) { result ->
+            commandExecutor.execCommand(CommandBuilder.concatVideo(activity, videos, finalPath)) { result ->
                 _uiState.value = _uiState.value.copy(showDialog = false)
                 if (result == 0) {
                     val intent = Intent(activity, VideoEditActivity::class.java)

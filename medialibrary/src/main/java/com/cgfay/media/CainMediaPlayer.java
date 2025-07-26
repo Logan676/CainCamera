@@ -16,6 +16,9 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
+import com.cgfay.media.command.CainEventHandler;
+import com.cgfay.media.CainMediaPlayerEventsKt;
+
 import com.cgfay.media.annotations.AccessedByNative;
 
 import java.io.FileDescriptor;
@@ -74,16 +77,16 @@ public class CainMediaPlayer implements IMediaPlayer {
     private static final String TAG = "CainMediaPlayer";
 
     @AccessedByNative
-    private long mNativeContext;
+    long mNativeContext;
     @AccessedByNative
-    private int mNativeSurfaceTexture; // nothing
+    int mNativeSurfaceTexture; // nothing
     @AccessedByNative
-    private int mListenerContext;   // nothing
-    private SurfaceHolder mSurfaceHolder;
-    private EventHandler mEventHandler;
-    private PowerManager.WakeLock mWakeLock = null;
-    private boolean mScreenOnWhilePlaying;
-    private boolean mStayAwake;
+    int mListenerContext;   // nothing
+    SurfaceHolder mSurfaceHolder;
+    CainEventHandler mEventHandler;
+    PowerManager.WakeLock mWakeLock = null;
+    boolean mScreenOnWhilePlaying;
+    boolean mStayAwake;
 
     /**
      * Default constructor. Consider using one of the create() methods for
@@ -95,9 +98,9 @@ public class CainMediaPlayer implements IMediaPlayer {
     public CainMediaPlayer() {
         Looper looper;
         if ((looper = Looper.myLooper()) != null) {
-            mEventHandler = new EventHandler(this, looper);
+            mEventHandler = new CainEventHandler(this, looper);
         } else if ((looper = Looper.getMainLooper()) != null) {
-            mEventHandler = new EventHandler(this, looper);
+            mEventHandler = new CainEventHandler(this, looper);
         } else {
             mEventHandler = null;
         }
@@ -539,7 +542,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         }
     }
 
-    private void stayAwake(boolean awake) {
+    void stayAwake(boolean awake) {
         if (mWakeLock != null) {
             if (awake && !mWakeLock.isHeld()) {
                 mWakeLock.acquire();
@@ -875,11 +878,6 @@ public class CainMediaPlayer implements IMediaPlayer {
 
     // ---------------------------------------------------------------------------------------------
     // Options
-    public static final int OPT_CATEGORY_FORMAT = 1;    // 解封装参数
-    public static final int OPT_CATEGORY_CODEC = 2;     // 解码参数
-    public static final int OPT_CATEGORY_SWS = 3;       // 视频转码参数
-    public static final int OPT_CATEGORY_PLAYER = 4;    // 播放器参数
-    public static final int OPT_CATEGORY_SWR = 5;       // 音频重采样参数
 
     /**
      * 设置播放器参数
@@ -913,141 +911,18 @@ public class CainMediaPlayer implements IMediaPlayer {
         super.finalize();
     }
 
+    private static void postEventFromNative(Object mediaplayer_ref,
+                                            int what, int arg1, int arg2, Object obj) {
+        CainMediaPlayer player = (CainMediaPlayer) ((WeakReference) mediaplayer_ref).get();
+        if (player != null) {
+            CainMediaPlayerEventsKt.postEventFromNative(player, mediaplayer_ref, what, arg1, arg2, obj);
+        }
+    }
+
     /* Do not change these values without updating their counterparts
      * in include/media/mediaplayer.h!
      */
-    private static final int MEDIA_NOP = 0; // interface test message
-    private static final int MEDIA_PREPARED = 1;
-    private static final int MEDIA_PLAYBACK_COMPLETE = 2;
-    private static final int MEDIA_BUFFERING_UPDATE = 3;
-    private static final int MEDIA_SEEK_COMPLETE = 4;
-    private static final int MEDIA_SET_VIDEO_SIZE = 5;
-    private static final int MEDIA_TIMED_TEXT = 99;
-    private static final int MEDIA_ERROR = 100;
-    private static final int MEDIA_INFO = 200;
-    private static final int MEDIA_CURRENT = 300;
 
-    private class EventHandler extends Handler {
-
-        private CainMediaPlayer mMediaPlayer;
-
-        public EventHandler(CainMediaPlayer mp, Looper looper) {
-            super(looper);
-            mMediaPlayer = mp;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            if (mMediaPlayer.mNativeContext == 0) {
-                Log.w(TAG, "mediaplayer went away with unhandled events");
-                return;
-            }
-
-            switch (msg.what) {
-                case MEDIA_PREPARED: {
-                    if (mOnPreparedListener != null)
-                        mOnPreparedListener.onPrepared(mMediaPlayer);
-                    return;
-                }
-
-                case MEDIA_PLAYBACK_COMPLETE: {
-                    if (mOnCompletionListener != null) {
-                        mOnCompletionListener.onCompletion(mMediaPlayer);
-                    }
-                    stayAwake(false);
-                    return;
-                }
-
-                case MEDIA_BUFFERING_UPDATE: {
-                    if (mOnBufferingUpdateListener != null) {
-                        mOnBufferingUpdateListener.onBufferingUpdate(mMediaPlayer, msg.arg1);
-                    }
-                    return;
-                }
-
-                case MEDIA_SEEK_COMPLETE: {
-                    if (mOnSeekCompleteListener != null) {
-                        mOnSeekCompleteListener.onSeekComplete(mMediaPlayer);
-                    }
-                    return;
-                }
-
-                case MEDIA_SET_VIDEO_SIZE: {
-                    if (mOnVideoSizeChangedListener != null) {
-                        mOnVideoSizeChangedListener.onVideoSizeChanged(mMediaPlayer, msg.arg1, msg.arg2);
-                    }
-                    return;
-                }
-
-                case MEDIA_ERROR: {
-                    // For PV specific error values (msg.arg2) look in
-                    // opencore/pvmi/pvmf/include/pvmf_return_codes.h
-                    Log.e(TAG, "Error (" + msg.arg1 + "," + msg.arg2 + ")");
-                    boolean error_was_handled = false;
-                    if (mOnErrorListener != null) {
-                        error_was_handled = mOnErrorListener.onError(mMediaPlayer, msg.arg1, msg.arg2);
-                    }
-                    if (mOnCompletionListener != null && !error_was_handled) {
-                        mOnCompletionListener.onCompletion(mMediaPlayer);
-                    }
-                    stayAwake(false);
-                    return;
-                }
-
-                case MEDIA_INFO: {
-                    if (msg.arg1 != MEDIA_INFO_VIDEO_TRACK_LAGGING) {
-                        Log.i(TAG, "Info (" + msg.arg1 + "," + msg.arg2 + ")");
-                    }
-                    if (mOnInfoListener != null) {
-                        mOnInfoListener.onInfo(mMediaPlayer, msg.arg1, msg.arg2);
-                    }
-                    // No real default action so far.
-                    return;
-                }
-
-                case MEDIA_TIMED_TEXT: {
-                    // do nothing
-                    return;
-                }
-
-                case MEDIA_NOP: { // interface test message - ignore
-                    break;
-                }
-
-                case MEDIA_CURRENT: {
-                    if (mOnCurrentPositionListener != null) {
-                        mOnCurrentPositionListener.onCurrentPosition(mMediaPlayer, msg.arg1, msg.arg2);
-                    }
-                    break;
-                }
-
-                default: {
-                    Log.e(TAG, "Unknown message type " + msg.what);
-                    return;
-                }
-            }
-        }
-    }
-
-    /**
-     * Called from native code when an interesting event happens.  This method
-     * just uses the EventHandler system to post the event back to the main app thread.
-     * We use a weak reference to the original MediaPlayer object so that the native
-     * code is safe from the object disappearing from underneath it.  (This is
-     * the cookie passed to native_setup().)
-     */
-    private static void postEventFromNative(Object mediaplayer_ref,
-                                            int what, int arg1, int arg2, Object obj) {
-        final CainMediaPlayer mp = (CainMediaPlayer)((WeakReference) mediaplayer_ref).get();
-        if (mp == null) {
-            return;
-        }
-
-        if (mp.mEventHandler != null) {
-            Message m = mp.mEventHandler.obtainMessage(what, arg1, arg2, obj);
-            mp.mEventHandler.sendMessage(m);
-        }
-    }
 
     /**
      * Register a callback to be invoked when the media source is ready
@@ -1060,7 +935,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnPreparedListener = listener;
     }
 
-    private OnPreparedListener mOnPreparedListener;
+    OnPreparedListener mOnPreparedListener;
 
 
     /**
@@ -1074,7 +949,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnCompletionListener = listener;
     }
 
-    private OnCompletionListener mOnCompletionListener;
+    OnCompletionListener mOnCompletionListener;
 
     /**
      * Register a callback to be invoked when the status of a network
@@ -1087,7 +962,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnBufferingUpdateListener = listener;
     }
 
-    private OnBufferingUpdateListener mOnBufferingUpdateListener;
+    OnBufferingUpdateListener mOnBufferingUpdateListener;
 
     /**
      * Register a callback to be invoked when a seek operation has been
@@ -1100,7 +975,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnSeekCompleteListener = listener;
     }
 
-    private OnSeekCompleteListener mOnSeekCompleteListener;
+    OnSeekCompleteListener mOnSeekCompleteListener;
 
     /**
      * Register a callback to be invoked when the video size is
@@ -1113,7 +988,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnVideoSizeChangedListener = listener;
     }
 
-    private OnVideoSizeChangedListener mOnVideoSizeChangedListener;
+    OnVideoSizeChangedListener mOnVideoSizeChangedListener;
 
 
     /**
@@ -1127,7 +1002,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnErrorListener = listener;
     }
 
-    private OnErrorListener mOnErrorListener;
+    OnErrorListener mOnErrorListener;
 
     /**
      * Register a callback to be invoked when an info/warning is available.
@@ -1139,7 +1014,7 @@ public class CainMediaPlayer implements IMediaPlayer {
         mOnInfoListener = listener;
     }
 
-    private OnInfoListener mOnInfoListener;
+    OnInfoListener mOnInfoListener;
 
     /**
      * Register a callback to be invoked on playing position.
@@ -1149,5 +1024,5 @@ public class CainMediaPlayer implements IMediaPlayer {
     public void setOnCurrentPositionListener(OnCurrentPositionListener listener) {
         mOnCurrentPositionListener = listener;
     }
-    private OnCurrentPositionListener mOnCurrentPositionListener;
+    OnCurrentPositionListener mOnCurrentPositionListener;
 }
