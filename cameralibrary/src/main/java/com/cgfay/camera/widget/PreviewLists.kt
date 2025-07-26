@@ -1,4 +1,4 @@
-package com.cgfay.camera.adapter
+package com.cgfay.camera.widget
 
 import android.net.Uri
 import androidx.compose.foundation.background
