@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 import com.cgfay.media.command.CainEventHandler;
 import com.cgfay.media.CainMediaPlayerEventsKt;
@@ -71,30 +72,12 @@ public class CainMediaPlayer implements IMediaPlayer, Closeable {
     private static final String TAG = "CainMediaPlayer";
 
     static {
-        try {
-            System.loadLibrary("ffmpeg");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffmpeg", e);
-            throw new RuntimeException("Failed to load native library: ffmpeg", e);
-        }
-        try {
-            System.loadLibrary("soundtouch");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library soundtouch", e);
-            throw new RuntimeException("Failed to load native library: soundtouch", e);
-        }
-        try {
-            System.loadLibrary("yuv");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library yuv", e);
-            throw new RuntimeException("Failed to load native library: yuv", e);
-        }
-        try {
-            System.loadLibrary("media_player");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library media_player", e);
-            throw new RuntimeException("Failed to load native library: media_player", e);
-        }
+        NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "soundtouch",
+                "yuv",
+                "media_player"
+        );
         native_init();
     }
 

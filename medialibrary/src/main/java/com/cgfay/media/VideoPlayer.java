@@ -11,6 +11,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -31,24 +32,11 @@ public class VideoPlayer implements IMediaPlayer {
     private static final String TAG = "VideoPlayer";
 
     static {
-        try {
-            System.loadLibrary("ffmpeg");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffmpeg", e);
-            throw new RuntimeException("Failed to load native library: ffmpeg", e);
-        }
-        try {
-            System.loadLibrary("yuv");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library yuv", e);
-            throw new RuntimeException("Failed to load native library: yuv", e);
-        }
-        try {
-            System.loadLibrary("videoplayer");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library videoplayer", e);
-            throw new RuntimeException("Failed to load native library: videoplayer", e);
-        }
+        NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "yuv",
+                "videoplayer"
+        );
         native_init();
     }
 

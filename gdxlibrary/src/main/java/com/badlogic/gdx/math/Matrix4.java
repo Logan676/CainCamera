@@ -13,6 +13,7 @@ import java.io.Serializable;
  *
  * @author badlogicgames@gmail.com */
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 public class Matrix4 implements Serializable {
     private static final long serialVersionUID = -2717655254359579617L;
@@ -1556,11 +1557,6 @@ public class Matrix4 implements Serializable {
     private static final String TAG = "Matrix4";
 
     static {
-        try {
-            System.loadLibrary("nativegdx");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library nativegdx", e);
-            throw new RuntimeException("Failed to load native library: nativegdx", e);
-        }
+        NativeLibraryLoader.loadLibraries("nativegdx");
     }
 }

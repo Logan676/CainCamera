@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import com.cgfay.uitls.utils.NativeLibraryLoader;
 
 import androidx.annotation.NonNull;
 
@@ -18,18 +19,10 @@ public class MusicPlayer implements Closeable {
     private static final String TAG = "MusicPlayer";
 
     static {
-        try {
-            System.loadLibrary("ffmpeg");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library ffmpeg", e);
-            throw new RuntimeException("Failed to load native library: ffmpeg", e);
-        }
-        try {
-            System.loadLibrary("musicplayer");
-        } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native library musicplayer", e);
-            throw new RuntimeException("Failed to load native library: musicplayer", e);
-        }
+        NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "musicplayer"
+        );
         native_init();
     }
 
