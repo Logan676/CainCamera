@@ -5,13 +5,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion(rootProject.extra["compileSdkVersion"] as Int)
-    buildToolsVersion(rootProject.extra["buildToolsVersion"] as String)
+    compileSdk = rootProject.extra["compileSdkVersion"] as Int
+    buildToolsVersion = rootProject.extra["buildToolsVersion"] as String
     namespace = "com.cgfay.video"
 
     defaultConfig {
         minSdk = rootProject.extra["minSdkVersion"] as Int
-        targetSdk = rootProject.extra["targetSdkVersion"] as Int
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

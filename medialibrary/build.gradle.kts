@@ -7,8 +7,8 @@ plugins {
 val platformVersion = rootProject.extra["minSdkVersion"].toString()
 
 android {
-    compileSdkVersion(rootProject.extra["compileSdkVersion"] as Int)
-    buildToolsVersion(rootProject.extra["buildToolsVersion"] as String)
+    compileSdk = rootProject.extra["compileSdkVersion"] as Int
+    buildToolsVersion = rootProject.extra["buildToolsVersion"] as String
     namespace = "com.cgfay.media"
 
     defaultConfig {
