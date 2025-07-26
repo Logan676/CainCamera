@@ -1,5 +1,6 @@
 package com.cgfay.image.compose.widget
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,15 +12,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 
 /**
- * Compose version of TextStickerView.
- * Provides basic drag, scale and rotate for text stickers.
- * TODO implement delete and edit callbacks like original view.
+ * Compose implementation of TextStickerView.
+ * Supports drag, scale, rotate, long press delete and double tap edit.
  */
 @Composable
 fun TextStickerCanvas(
     text: String,
     color: Color = Color.White,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDelete: () -> Unit = {},
+    onEdit: () -> Unit = {}
 ) {
     var scale by remember { mutableStateOf(1f) }
     var rotation by remember { mutableStateOf(0f) }
@@ -36,6 +38,12 @@ fun TextStickerCanvas(
                     offsetX += pan.x
                     offsetY += pan.y
                 }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onEdit() },
+                    onLongPress = { onDelete() }
+                )
             }
     ) {
         Text(
