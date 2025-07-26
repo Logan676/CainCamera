@@ -12,7 +12,6 @@ android {
 
     defaultConfig {
         minSdk = platformVersion.toInt()
-        targetSdk = rootProject.extra["targetSdkVersion"] as Int
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -44,7 +43,6 @@ android {
 
     sourceSets["main"].apply {
         jniLibs.srcDir("src/main/jniLibs")
-        jni.srcDirs(emptyList<String>())
         resources.srcDir("src/main/shell")
     }
 
@@ -54,15 +52,21 @@ android {
         }
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        }
     }
 
-    packagingOptions {
-        pickFirst("lib/arm64-v8a/libyuv.so")
-        pickFirst("lib/armeabi-v7a/libyuv.so")
-        pickFirst("lib/arm64-v8a/libffmpeg.so")
-        pickFirst("lib/armeabi-v7a/libffmpeg.so")
+    packaging {
+        jniLibs {
+            pickFirsts += listOf(
+                "lib/arm64-v8a/libyuv.so",
+                "lib/armeabi-v7a/libyuv.so",
+                "lib/arm64-v8a/libffmpeg.so",
+                "lib/armeabi-v7a/libffmpeg.so"
+            )
+        }
     }
 
     compileOptions {
@@ -76,6 +80,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = rootProject.extra["composeCompilerVersion"] as String
+    }
+    testOptions {
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
+    }
+    lint {
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
     }
 }
 

@@ -10,7 +10,6 @@ android {
 
     defaultConfig {
         minSdk = rootProject.extra["minSdkVersion"] as Int
-        targetSdk = rootProject.extra["targetSdkVersion"] as Int
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
@@ -35,7 +34,6 @@ android {
 
     sourceSets["main"].apply {
         jniLibs.srcDirs("src/main/jniLibs")
-        jni.srcDirs(emptyList<String>())
     }
 
     externalNativeBuild {
@@ -54,8 +52,16 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = rootProject.extra["composeVersion"] as String
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        }
+    }
+    testOptions {
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
+    }
+    lint {
+        targetSdk = rootProject.extra["targetSdkVersion"] as Int
     }
 }
 
