@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     id("kotlin-android")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
 }
 
 android {
@@ -33,9 +34,6 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = rootProject.extra["composeVersion"] as String
     }
     testOptions {
         targetSdk = rootProject.extra["targetSdkVersion"] as Int
