@@ -1,4 +1,4 @@
-rootProject.buildFileName = "build.gradle.kt"
+rootProject.buildFileName = "build.gradle.kts"
 
 include(
     ":app",
