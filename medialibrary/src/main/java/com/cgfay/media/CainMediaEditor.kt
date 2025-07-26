@@ -1,14 +1,23 @@
 package com.cgfay.media
 
-import androidx.annotation.NonNull
 import com.cgfay.uitls.utils.FileUtils
 import com.cgfay.uitls.utils.NativeLibraryLoader
 import java.io.Closeable
 
-/**
- * 媒体编辑器
- */
 class CainMediaEditor : Closeable {
+
+    companion object {
+        private const val TAG = "CainMediaEditor"
+
+        init {
+            NativeLibraryLoader.loadLibraries(
+                "ffmpeg",
+                "soundtouch",
+                "yuv",
+                "media_editor"
+            )
+        }
+    }
 
     private external fun nativeInit(): Long
     private external fun nativeRelease(handle: Long)
@@ -16,19 +25,8 @@ class CainMediaEditor : Closeable {
     private external fun audioCut(handle: Long, srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?)
     private external fun videoReverse(handle: Long, srcPath: String, dstPath: String, listener: OnEditProcessListener?)
 
-    private var handle: Long = 0
+    private var handle: Long = nativeInit()
 
-    init {
-        NativeLibraryLoader.loadLibraries(
-            "ffmpeg",
-            "soundtouch",
-            "yuv",
-            "media_editor"
-        )
-        handle = nativeInit()
-    }
-
-    /** 释放资源 */
     fun release() {
         if (handle != 0L) {
             nativeRelease(handle)
@@ -40,8 +38,7 @@ class CainMediaEditor : Closeable {
         release()
     }
 
-    /** 视频裁剪 */
-    fun videoCut(@NonNull srcPath: String, @NonNull dstPath: String, start: Float, duration: Float, listener: OnEditProcessListener?) {
+    fun videoCut(srcPath: String, dstPath: String, start: Float, duration: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             videoCut(handle, srcPath, dstPath, start, duration, 1.0f, listener)
         } else {
@@ -49,8 +46,7 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** 视频裁剪，带倍速调整 */
-    fun videoSpeedCut(@NonNull srcPath: String, @NonNull dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?) {
+    fun videoSpeedCut(srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             videoCut(handle, srcPath, dstPath, start, duration, speed, listener)
         } else {
@@ -58,8 +54,7 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** 音频裁剪 */
-    fun audioCut(@NonNull srcPath: String, @NonNull dstPath: String, start: Float, duration: Float, listener: OnEditProcessListener?) {
+    fun audioCut(srcPath: String, dstPath: String, start: Float, duration: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             audioCut(handle, srcPath, dstPath, start, duration, 1.0f, listener)
         } else {
@@ -67,8 +62,7 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** 音频裁剪，带倍速处理 */
-    fun audioSpeedCut(@NonNull srcPath: String, @NonNull dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?) {
+    fun audioSpeedCut(srcPath: String, dstPath: String, start: Float, duration: Float, speed: Float, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             audioCut(handle, srcPath, dstPath, start, duration, speed, listener)
         } else {
@@ -76,8 +70,7 @@ class CainMediaEditor : Closeable {
         }
     }
 
-    /** TODO 视频逆序处理，不支持存在B帧的视频进行逆序 */
-    fun videoReverse(@NonNull srcPath: String, @NonNull dstPath: String, listener: OnEditProcessListener?) {
+    fun videoReverse(srcPath: String, dstPath: String, listener: OnEditProcessListener?) {
         if (FileUtils.fileExists(srcPath)) {
             videoReverse(handle, srcPath, dstPath, listener)
         } else {

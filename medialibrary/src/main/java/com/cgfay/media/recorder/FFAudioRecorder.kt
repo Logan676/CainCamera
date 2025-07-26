@@ -6,9 +6,6 @@ import android.media.MediaRecorder
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -32,8 +29,8 @@ class FFAudioRecorder {
     private var recordCallback: OnRecordCallback? = null
     private var handler: Handler? = null
 
-    /** Recording flag that can be observed from Compose UI. */
-    var isRecording by mutableStateOf(false)
+    /** Recording flag. */
+    var isRecording: Boolean = false
         private set
 
     /**
